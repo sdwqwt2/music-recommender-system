@@ -123,10 +123,12 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     scheduler: Optional[torch.optim.lr_scheduler._LRScheduler],
     device: torch.device,
+    scaler: Optional[torch.cuda.amp.GradScaler] = None,
+    use_amp: bool = False,
     clip_grad_norm: float = 1.0,
     epoch: int = 1,
 ) -> float:
-    """Executes one training epoch with gradient clipping and loss logging."""
+    """Executes one training epoch with optional mixed precision (AMP) and gradient clipping."""
     model.train()
     total_loss = 0.0
     num_batches = 0
@@ -136,19 +138,27 @@ def train_one_epoch(
         batch = batch.to(device)
         optimizer.zero_grad()
 
-        output = model(
-            input_ids=batch.input_ids,
-            attention_mask=batch.attention_mask,
-            labels=batch.labels,
-        )
+        with torch.amp.autocast(device_type="cuda", enabled=use_amp):
+            output = model(
+                input_ids=batch.input_ids,
+                attention_mask=batch.attention_mask,
+                labels=batch.labels,
+            )
+            loss = output.loss
 
-        loss = output.loss
-        loss.backward()
+        if use_amp and scaler is not None:
+            scaler.scale(loss).backward()
+            if clip_grad_norm > 0:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            if clip_grad_norm > 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
+            optimizer.step()
 
-        if clip_grad_norm > 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
-
-        optimizer.step()
         if scheduler is not None:
             scheduler.step()
 
@@ -164,6 +174,7 @@ def evaluate(
     model: RecSysGPT2,
     dataloader: DataLoader,
     device: torch.device,
+    use_amp: bool = False,
     top_k: int = 10,
 ) -> Dict[str, float]:
     """Evaluates validation loss, Perplexity, HitRate@10, and NDCG@10."""
@@ -177,11 +188,12 @@ def evaluate(
     for batch in dataloader:
         batch = batch.to(device)
 
-        output = model(
-            input_ids=batch.input_ids,
-            attention_mask=batch.attention_mask,
-            labels=batch.labels,
-        )
+        with torch.amp.autocast(device_type="cuda", enabled=use_amp):
+            output = model(
+                input_ids=batch.input_ids,
+                attention_mask=batch.attention_mask,
+                labels=batch.labels,
+            )
 
         total_loss += output.loss.item()
         num_batches += 1
@@ -242,10 +254,15 @@ def generate_synthetic_yambda_data(output_path: Path, num_interactions: int = 50
 
 
 def main() -> None:
+    # Auto-detect Kaggle environment
+    is_kaggle = os.path.exists("/kaggle") or "KAGGLE_KERNEL_RUN_TYPE" in os.environ
+    default_output = "/kaggle/working/checkpoints" if is_kaggle else "checkpoints"
+    default_processed = "/kaggle/working/data/processed" if is_kaggle else "data/processed"
+
     parser = argparse.ArgumentParser(description="Train Base GPT-2 Recommender Model on Yambda")
     parser.add_argument("--data_path", type=str, default="data/synthetic_yambda.parquet", help="Path to interactions file")
-    parser.add_argument("--processed_dir", type=str, default="data/processed", help="Directory for processed splits")
-    parser.add_argument("--output_dir", type=str, default="checkpoints", help="Directory for model checkpoints")
+    parser.add_argument("--processed_dir", type=str, default=default_processed, help="Directory for processed splits")
+    parser.add_argument("--output_dir", type=str, default=default_output, help="Directory for model checkpoints")
     parser.add_argument("--synthetic", action="store_true", help="Generate synthetic dataset for testing")
     parser.add_argument("--min_item_freq", type=int, default=5, help="Prune items with fewer interactions")
     parser.add_argument("--max_length", type=int, default=64, help="Sequence maximum length")
@@ -256,6 +273,8 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--split_mode", type=str, default="global_temporal", choices=["global_temporal", "user_temporal"])
+    parser.add_argument("--fp16", action="store_true", help="Enable Mixed Precision training (NVIDIA CUDA)")
+    parser.add_argument("--num_workers", type=int, default=2 if is_kaggle else 0, help="DataLoader subprocess workers")
     parser.add_argument("--use_wandb", action="store_true", help="Enable Weights & Biases logging")
     parser.add_argument("--wandb_project", type=str, default="yambda-gpt2-recsys", help="WandB project name")
     args = parser.parse_args()
@@ -263,6 +282,18 @@ def main() -> None:
     device = get_device()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if is_kaggle:
+        print(f"[Kaggle] Detected Kaggle execution environment. Output directory: {output_dir}")
+
+    # Mixed precision setup
+    use_amp = args.fp16 and device.type == "cuda"
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+    if args.fp16:
+        if device.type == "cuda":
+            print("[AMP] FP16 mixed precision enabled on NVIDIA GPU.")
+        else:
+            print(f"[AMP] Notice: --fp16 requested but current device is {device.type}. Running in full precision.")
 
     # 1. Prepare data
     data_file = Path(args.data_path)
@@ -277,16 +308,17 @@ def main() -> None:
     )
 
     # 2. Build PyTorch DataLoaders
-    # Training uses sliding window for sequence augmentation
+    pin_mem = device.type == "cuda"
     train_loader = create_dataloader(
         df=train_df,
         max_length=args.max_length,
         batch_size=args.batch_size,
         shuffle=True,
         sliding_window=True,
+        num_workers=args.num_workers,
+        pin_memory=pin_mem,
     )
 
-    # Validation evaluates next item on user's chronological trajectory with historical context
     val_loader = create_dataloader(
         df=val_df,
         history_df=train_df,
@@ -294,6 +326,8 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=False,
         sliding_window=False,
+        num_workers=args.num_workers,
+        pin_memory=pin_mem,
     )
 
     # 3. Initialize Base GPT-2 from scratch
@@ -327,6 +361,7 @@ def main() -> None:
                     "batch_size": args.batch_size,
                     "epochs": args.epochs,
                     "split_mode": args.split_mode,
+                    "fp16": use_amp,
                 },
             )
             print("[WandB] Successfully initialized Weights & Biases tracking.")
@@ -338,7 +373,7 @@ def main() -> None:
     best_checkpoint_path = output_dir / "best_gpt2_recsys.pt"
 
     print("\n" + "=" * 60)
-    print(f"Starting Training: {args.epochs} Epochs | Batch Size: {args.batch_size} | Device: {device}")
+    print(f"Starting Training: {args.epochs} Epochs | Batch Size: {args.batch_size} | Device: {device} | FP16: {use_amp}")
     print("=" * 60)
 
     for epoch in range(1, args.epochs + 1):
@@ -349,10 +384,12 @@ def main() -> None:
             optimizer=optimizer,
             scheduler=scheduler,
             device=device,
+            scaler=scaler,
+            use_amp=use_amp,
             epoch=epoch,
         )
 
-        val_metrics = evaluate(model=model, dataloader=val_loader, device=device, top_k=10)
+        val_metrics = evaluate(model=model, dataloader=val_loader, device=device, use_amp=use_amp, top_k=10)
         elapsed = time.time() - t0
 
         val_loss = val_metrics["val_loss"]

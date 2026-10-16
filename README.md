@@ -108,6 +108,37 @@ To enable Weights & Biases logging, add the flag:
 --use_wandb --wandb_project yambda-gpt2-recsys
 ```
 
+### 4. Running on Kaggle (GPU & Mixed Precision FP16)
+Kaggle provides **30 hours/week of free NVIDIA GPU (T4 x 2 or P100)** with 16GB VRAM, which accelerates training by ~10x over standard CPU setups.
+
+1. **Pre-flight settings in Kaggle Notebook:**
+   - In the right-hand panel under **Settings -> Accelerator**, select **GPU T4 x 2** or **GPU P100**.
+   - Under **Settings -> Internet**, toggle **Internet ON** (required for packages and cloning).
+   - Attach your Yambda dataset under `/kaggle/input/` via **+ Add Input**.
+
+2. **Option A: Upload the Turnkey Runner Notebook:**
+   - Simply upload [kaggle_run.ipynb](file:///Users/lex/Antigravity/Music-Recommender-System/kaggle_run.ipynb) to Kaggle via **File -> Upload Notebook**.
+   - Run all cells sequentially to verify GPU, install dependencies, train with `--fp16`, test recommendations, and export checkpoints.
+
+3. **Option B: Run via Terminal / Git Clone in Kaggle:**
+   ```bash
+   !git clone https://github.com/<your-username>/Music-Recommender-System.git
+   %cd Music-Recommender-System
+   !pip install -q -r requirements.txt
+   
+   !python train_base.py \
+       --data_path /kaggle/input/<dataset-folder>/yambda_interactions.parquet \
+       --processed_dir /kaggle/working/data/processed \
+       --output_dir /kaggle/working/checkpoints \
+       --batch_size 128 \
+       --epochs 10 \
+       --fp16 \
+       --num_workers 2
+   ```
+4. **Artifacts Output:**
+   - Checkpoints are saved to `/kaggle/working/checkpoints/best_gpt2_recsys.pt`.
+   - Download the model weights directly from Kaggle's **Output** panel.
+
 ---
 
 ## 🔮 Phase 2 Roadmap: Reinforcement Learning (RL) Fine-Tuning

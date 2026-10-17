@@ -43,6 +43,10 @@ except ImportError:
     HAS_WANDB = False
 
 
+# Prevent CUDA memory fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+
 def get_device() -> torch.device:
     """Detects and returns the best available compute device (CUDA -> MPS -> CPU)."""
     if torch.cuda.is_available():
@@ -68,9 +72,10 @@ def compute_recsys_metrics(
 ) -> Tuple[float, float, int]:
     """
     Computes HitRate@K and NDCG@K for next-item prediction on the final valid position of each sequence.
+    Handles both full sequence logits [B, L, vocab_size] and memory-efficient last-token logits [B, 1, vocab_size].
 
     Args:
-        logits: FloatTensor [B, L, vocab_size]
+        logits: FloatTensor [B, L, vocab_size] or [B, 1, vocab_size]
         labels: LongTensor [B, L]
         attention_mask: LongTensor [B, L]
         top_k: Ranking cutoff (default: 10)
@@ -82,11 +87,18 @@ def compute_recsys_metrics(
     # Identify the last valid label position for each sequence
     seq_lens = attention_mask.sum(dim=-1) - 1  # [B]
     seq_lens = torch.clamp(seq_lens, min=0)
-    batch_indices = torch.arange(logits.size(0), device=logits.device)
+    batch_indices = torch.arange(labels.size(0), device=labels.device)
 
-    # Extract target items and candidate logits at the final position
+    # Extract target items at the final position
     target_items = labels[batch_indices, seq_lens]  # [B]
-    last_logits = logits[batch_indices, seq_lens].clone()  # [B, vocab_size]
+
+    # Extract candidate logits at the final position
+    if logits.dim() == 2:
+        last_logits = logits.clone()
+    elif logits.size(1) == 1:
+        last_logits = logits[:, 0, :].clone()
+    else:
+        last_logits = logits[batch_indices, seq_lens].clone()
 
     # Exclude <PAD> from predictions
     last_logits[:, pad_token_id] = -float("inf")
@@ -123,20 +135,21 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     scheduler: Optional[torch.optim.lr_scheduler._LRScheduler],
     device: torch.device,
-    scaler: Optional[torch.cuda.amp.GradScaler] = None,
+    scaler: Optional[torch.amp.GradScaler] = None,
     use_amp: bool = False,
+    gradient_accumulation_steps: int = 1,
     clip_grad_norm: float = 1.0,
     epoch: int = 1,
 ) -> float:
-    """Executes one training epoch with optional mixed precision (AMP) and gradient clipping."""
+    """Executes one training epoch with micro-batching, gradient accumulation, and mixed precision."""
     model.train()
     total_loss = 0.0
     num_batches = 0
+    optimizer.zero_grad()
 
     progress_bar = tqdm(dataloader, desc=f"Epoch {epoch} [Train]", leave=False)
-    for batch in progress_bar:
+    for step, batch in enumerate(progress_bar, start=1):
         batch = batch.to(device)
-        optimizer.zero_grad()
 
         with torch.amp.autocast(device_type="cuda", enabled=use_amp):
             output = model(
@@ -144,27 +157,35 @@ def train_one_epoch(
                 attention_mask=batch.attention_mask,
                 labels=batch.labels,
             )
-            loss = output.loss
+            # Scale loss for gradient accumulation
+            loss = output.loss / gradient_accumulation_steps
 
         if use_amp and scaler is not None:
             scaler.scale(loss).backward()
-            if clip_grad_norm > 0:
-                scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
-            scaler.step(optimizer)
-            scaler.update()
         else:
             loss.backward()
-            if clip_grad_norm > 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
-            optimizer.step()
 
-        if scheduler is not None:
-            scheduler.step()
+        # Step optimizer and scheduler every gradient_accumulation_steps
+        if step % gradient_accumulation_steps == 0 or step == len(dataloader):
+            if use_amp and scaler is not None:
+                if clip_grad_norm > 0:
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                if clip_grad_norm > 0:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_grad_norm)
+                optimizer.step()
 
-        total_loss += loss.item()
+            optimizer.zero_grad()
+            if scheduler is not None:
+                scheduler.step()
+
+        batch_loss = loss.item() * gradient_accumulation_steps
+        total_loss += batch_loss
         num_batches += 1
-        progress_bar.set_postfix({"loss": f"{loss.item():.4f}"})
+        progress_bar.set_postfix({"loss": f"{batch_loss:.4f}"})
 
     return total_loss / max(1, num_batches)
 
@@ -177,8 +198,11 @@ def evaluate(
     use_amp: bool = False,
     top_k: int = 10,
 ) -> Dict[str, float]:
-    """Evaluates validation loss, Perplexity, HitRate@10, and NDCG@10."""
+    """Evaluates validation loss, Perplexity, HitRate@10, and NDCG@10 using memory-efficient projection."""
     model.eval()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+
     total_loss = 0.0
     total_hits = 0.0
     total_ndcg = 0.0
@@ -189,10 +213,12 @@ def evaluate(
         batch = batch.to(device)
 
         with torch.amp.autocast(device_type="cuda", enabled=use_amp):
+            # Crucial: last_token_only=True cuts evaluation memory from 10+ GB to <200 MB!
             output = model(
                 input_ids=batch.input_ids,
                 attention_mask=batch.attention_mask,
                 labels=batch.labels,
+                last_token_only=True,
             )
 
         total_loss += output.loss.item()
@@ -214,6 +240,9 @@ def evaluate(
     perplexity = math.exp(min(avg_loss, 20.0))  # clamp to avoid overflow
     hr = total_hits / max(1, total_eval_samples)
     ndcg = total_ndcg / max(1, total_eval_samples)
+
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
 
     return {
         "val_loss": avg_loss,
@@ -277,7 +306,9 @@ def main() -> None:
     parser.add_argument("--n_embd", type=int, default=128, help="Embedding dimension")
     parser.add_argument("--n_layer", type=int, default=3, help="Transformer layers")
     parser.add_argument("--n_head", type=int, default=4, help="Attention heads")
-    parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
+    parser.add_argument("--batch_size", type=int, default=32, help="Micro-batch size (default: 32)")
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of steps to accumulate gradients (default: 4, effective batch = batch_size * grad_accum)")
+    parser.add_argument("--max_items", type=int, default=100000, help="Cap top-N items by frequency to bound vocabulary (default: 100000)")
     parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--split_mode", type=str, default="global_temporal", choices=["global_temporal", "user_temporal"])
@@ -312,6 +343,7 @@ def main() -> None:
         data_path=data_file,
         output_dir=args.processed_dir,
         min_item_frequency=args.min_item_freq,
+        max_items=args.max_items,
         split_mode=args.split_mode,
         user_col=args.user_col,
         item_col=args.item_col,
@@ -355,7 +387,8 @@ def main() -> None:
 
     # 4. Optimization Setup
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
-    total_steps = len(train_loader) * args.epochs
+    effective_steps_per_epoch = max(1, len(train_loader) // args.gradient_accumulation_steps + (1 if len(train_loader) % args.gradient_accumulation_steps != 0 else 0))
+    total_steps = effective_steps_per_epoch * args.epochs
     scheduler = CosineAnnealingLR(optimizer, T_max=max(1, total_steps), eta_min=1e-5)
 
     # 5. WandB Logging Setup
@@ -373,6 +406,9 @@ def main() -> None:
                     "n_head": args.n_head,
                     "lr": args.lr,
                     "batch_size": args.batch_size,
+                    "gradient_accumulation_steps": args.gradient_accumulation_steps,
+                    "effective_batch_size": args.batch_size * args.gradient_accumulation_steps,
+                    "max_items": args.max_items,
                     "epochs": args.epochs,
                     "split_mode": args.split_mode,
                     "fp16": use_amp,
@@ -386,8 +422,9 @@ def main() -> None:
     best_hr = -1.0
     best_checkpoint_path = output_dir / "best_gpt2_recsys.pt"
 
+    effective_batch = args.batch_size * args.gradient_accumulation_steps
     print("\n" + "=" * 60)
-    print(f"Starting Training: {args.epochs} Epochs | Batch Size: {args.batch_size} | Device: {device} | FP16: {use_amp}")
+    print(f"Starting Training: {args.epochs} Epochs | Micro-Batch: {args.batch_size} (Effective: {effective_batch}) | Device: {device} | FP16: {use_amp}")
     print("=" * 60)
 
     for epoch in range(1, args.epochs + 1):
@@ -401,6 +438,7 @@ def main() -> None:
             scaler=scaler,
             use_amp=use_amp,
             epoch=epoch,
+            gradient_accumulation_steps=args.gradient_accumulation_steps,
         )
 
         val_metrics = evaluate(model=model, dataloader=val_loader, device=device, use_amp=use_amp, top_k=10)

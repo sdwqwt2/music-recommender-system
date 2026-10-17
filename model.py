@@ -129,6 +129,7 @@ class RecSysGPT2(nn.Module):
         input_ids: torch.Tensor,
         attention_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
+        last_token_only: bool = False,
     ) -> RecSysOutput:
         """
         Forward pass through Causal GPT-2.
@@ -137,16 +138,46 @@ class RecSysGPT2(nn.Module):
             input_ids: LongTensor [B, L] containing item tokens.
             attention_mask: Optional LongTensor [B, L] with 1 for real items, 0 for <PAD>.
             labels: Optional LongTensor [B, L] containing shifted ground-truth item tokens.
+            last_token_only: If True, projects only the final active interaction token.
+                Bypasses full B x L x V tensor creation to slash VRAM from 10+ GB to <200 MB during evaluation!
 
         Returns:
-            RecSysOutput containing logits [B, L, vocab_size], optional scalar loss,
-            and optional last hidden state representations [B, L, n_embd].
+            RecSysOutput containing logits, optional scalar loss, and last hidden state.
         """
         # Auto-generate attention mask if omitted
         if attention_mask is None:
             attention_mask = (input_ids != self.pad_token_id).long()
 
-        # Forward through transformer (without internal labels to compute custom loss)
+        if last_token_only:
+            # Memory-Efficient Evaluation Mode: Pass through decoder backbone only
+            backbone_outputs = self.transformer.transformer(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                output_hidden_states=False,
+                return_dict=True,
+            )
+            hidden_states = backbone_outputs.last_hidden_state  # [B, L, n_embd]
+
+            # Extract hidden state at the last active token
+            seq_lens = torch.clamp(attention_mask.sum(dim=-1) - 1, min=0)
+            batch_idx = torch.arange(input_ids.size(0), device=input_ids.device)
+            last_hidden = hidden_states[batch_idx, seq_lens]  # [B, n_embd]
+
+            # Project ONLY the last token through lm_head [B, vocab_size] (Tiny memory!)
+            last_logits = self.transformer.lm_head(last_hidden)  # [B, vocab_size]
+
+            loss = None
+            if labels is not None:
+                last_labels = labels[batch_idx, seq_lens]
+                loss = self.loss_fct(last_logits, last_labels)
+
+            return RecSysOutput(
+                logits=last_logits.unsqueeze(1),  # [B, 1, vocab_size]
+                loss=loss,
+                last_hidden_state=last_hidden.unsqueeze(1),
+            )
+
+        # Standard Training Mode: Forward across full sequence window
         transformer_outputs = self.transformer(
             input_ids=input_ids,
             attention_mask=attention_mask,

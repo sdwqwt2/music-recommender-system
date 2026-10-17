@@ -176,11 +176,13 @@ def filter_rare_items(
     df: pd.DataFrame,
     min_item_frequency: int = 5,
     min_user_interactions: int = 3,
+    max_items: Optional[int] = None,
     item_col: str = "item_id",
     user_col: str = "uid",
 ) -> pd.DataFrame:
     """
     Prunes items appearing fewer than `min_item_frequency` times.
+    Optionally caps vocabulary to top `max_items` to strictly bound VRAM.
     After pruning items, users with fewer than `min_user_interactions` are removed
     to ensure every remaining user sequence can yield at least one valid (input, label) pair.
 
@@ -188,6 +190,7 @@ def filter_rare_items(
         df: Input DataFrame containing interaction logs.
         min_item_frequency: Threshold below which items are filtered out.
         min_user_interactions: Threshold below which user sequences are discarded.
+        max_items: Optional hard cap on unique items (retains top frequent items).
         item_col: Column name representing item identifiers.
         user_col: Column name representing user identifiers (default: 'uid').
 
@@ -205,9 +208,17 @@ def filter_rare_items(
     initial_items = df[item_col].nunique()
     initial_users = df[user_col].nunique()
 
-    # Step 1: Filter rare items
+    # Step 1: Filter rare items and optionally cap vocabulary
     item_counts = df[item_col].value_counts()
     frequent_items = item_counts[item_counts >= min_item_frequency].index
+    if max_items is not None and len(frequent_items) > max_items:
+        logger.info(
+            "Capping item catalog from %d frequent items to top %d items to strictly control VRAM",
+            len(frequent_items),
+            max_items,
+        )
+        frequent_items = frequent_items[:max_items]
+
     filtered_df = df[df[item_col].isin(frequent_items)].copy()
 
     # Step 2: Filter users with too few interactions after item pruning
@@ -216,10 +227,11 @@ def filter_rare_items(
     filtered_df = filtered_df[filtered_df[user_col].isin(active_users)].copy()
 
     logger.info(
-        "Rare-item filtering (freq >= %d, user_interactions >= %d): "
+        "Rare-item filtering (freq >= %d, user_interactions >= %d, max_items=%s): "
         "Rows: %d -> %d (%.2f%% retained), Items: %d -> %d, Users: %d -> %d",
         min_item_frequency,
         min_user_interactions,
+        max_items,
         initial_rows,
         len(filtered_df),
         (len(filtered_df) / max(1, initial_rows)) * 100.0,
@@ -328,6 +340,7 @@ def preprocess_pipeline(
     output_dir: Union[str, Path],
     min_item_frequency: int = 5,
     min_user_interactions: int = 3,
+    max_items: Optional[int] = None,
     split_mode: Literal["global_temporal", "user_temporal"] = "global_temporal",
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
@@ -403,6 +416,7 @@ def preprocess_pipeline(
         df=df,
         min_item_frequency=min_item_frequency,
         min_user_interactions=min_user_interactions,
+        max_items=max_items,
         item_col=item_col,
         user_col=user_col,
     )

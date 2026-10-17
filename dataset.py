@@ -85,7 +85,7 @@ class SequentialRecDataset(Dataset):
         df: pd.DataFrame,
         history_df: Optional[pd.DataFrame] = None,
         max_length: int = 64,
-        user_col: str = "user_id",
+        user_col: str = "uid",
         item_token_col: str = "item_token",
         timestamp_col: str = "timestamp",
         duration_col: str = "listen_duration_sec",
@@ -98,6 +98,13 @@ class SequentialRecDataset(Dataset):
         self.pad_token_id: int = pad_token_id
         self.sliding_window: bool = sliding_window
         self.stride: int = stride if stride is not None else max(1, max_length // 2)
+
+        # Resolve user_col alias if needed
+        if user_col not in df.columns:
+            if "uid" in df.columns:
+                user_col = "uid"
+            elif "user_id" in df.columns:
+                user_col = "user_id"
 
         # In evaluation (val/test), concatenate historical interactions with target split
         # to ensure users have full chronological context up to the evaluation target.
@@ -255,6 +262,7 @@ def create_dataloader(
     shuffle: bool = True,
     sliding_window: bool = False,
     stride: Optional[int] = None,
+    user_col: str = "uid",
     num_workers: int = 0,
     pin_memory: bool = False,
     pad_token_id: int = 0,
@@ -266,6 +274,7 @@ def create_dataloader(
         df=df,
         history_df=history_df,
         max_length=max_length,
+        user_col=user_col,
         sliding_window=sliding_window,
         stride=stride,
         pad_token_id=pad_token_id,

@@ -177,7 +177,7 @@ def filter_rare_items(
     min_item_frequency: int = 5,
     min_user_interactions: int = 3,
     item_col: str = "item_id",
-    user_col: str = "user_id",
+    user_col: str = "uid",
 ) -> pd.DataFrame:
     """
     Prunes items appearing fewer than `min_item_frequency` times.
@@ -189,11 +189,18 @@ def filter_rare_items(
         min_item_frequency: Threshold below which items are filtered out.
         min_user_interactions: Threshold below which user sequences are discarded.
         item_col: Column name representing item identifiers.
-        user_col: Column name representing user identifiers.
+        user_col: Column name representing user identifiers (default: 'uid').
 
     Returns:
         Filtered DataFrame with reduced sparsity and controlled vocabulary size.
     """
+    # Auto-resolve user column alias if needed
+    if user_col not in df.columns:
+        if "uid" in df.columns:
+            user_col = "uid"
+        elif "user_id" in df.columns:
+            user_col = "user_id"
+
     initial_rows = len(df)
     initial_items = df[item_col].nunique()
     initial_users = df[user_col].nunique()
@@ -230,7 +237,7 @@ def split_data_temporally(
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
     timestamp_col: str = "timestamp",
-    user_col: str = "user_id",
+    user_col: str = "uid",
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Performs a strict temporal train/val/test split guaranteeing zero data leakage.
@@ -324,7 +331,7 @@ def preprocess_pipeline(
     split_mode: Literal["global_temporal", "user_temporal"] = "global_temporal",
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
-    user_col: str = "user_id",
+    user_col: str = "uid",
     item_col: str = "item_id",
     timestamp_col: str = "timestamp",
     duration_col: str = "listen_duration_sec",
@@ -334,12 +341,13 @@ def preprocess_pipeline(
 
     Pipeline Steps:
     1. Load data from CSV or Parquet.
-    2. Filter out rare items and low-interaction users to cap vocab & memory.
-    3. Perform strict time-series split (Train / Val / Test).
-    4. Fit ItemTokenizer strictly on the training catalog (zero leakage of test catalog).
-    5. Encode item_id into continuous integer indices [1, ..., N] (0 = <PAD>).
-    6. Filter out cold-start/unseen items from Val and Test to maintain evaluateable sequences.
-    7. Save tokenized datasets, tokenizer mapping, and metadata stats to disk.
+    2. Harmonize schema (uid vs user_id, derive listen_duration_sec).
+    3. Filter out rare items and low-interaction users to cap vocab & memory.
+    4. Perform strict time-series split (Train / Val / Test).
+    5. Fit ItemTokenizer strictly on the training catalog (zero leakage of test catalog).
+    6. Encode item_id into continuous integer indices [1, ..., N] (0 = <PAD>).
+    7. Filter out cold-start/unseen items from Val and Test to maintain evaluateable sequences.
+    8. Save tokenized datasets, tokenizer mapping, and metadata stats to disk.
 
     Returns:
         (train_df, val_df, test_df, tokenizer, stats)
@@ -356,19 +364,39 @@ def preprocess_pipeline(
     else:
         raise ValueError(f"Unsupported file format '{data_path.suffix}'. Expected .parquet or .csv")
 
-    # Validate essential schema
-    required_cols = [user_col, item_col, timestamp_col]
+    # 1. Schema Harmonization: Map user identifier flexibly
+    if user_col not in df.columns:
+        if "uid" in df.columns:
+            logger.info("Harmonizing user identifier column 'uid' -> '%s'", user_col)
+            df[user_col] = df["uid"]
+        elif "user_id" in df.columns:
+            logger.info("Harmonizing user identifier column 'user_id' -> '%s'", user_col)
+            df[user_col] = df["user_id"]
+        else:
+            raise KeyError(
+                f"Missing user identifier column '{user_col}' (and aliases 'uid', 'user_id'). "
+                f"Available columns: {list(df.columns)}"
+            )
+
+    # 2. Derive listen_duration_sec from native Yambda columns if missing
+    if duration_col not in df.columns:
+        if "played_ratio_pct" in df.columns and "track_length_seconds" in df.columns:
+            logger.info("Computing '%s' from Yambda 'played_ratio_pct' and 'track_length_seconds'", duration_col)
+            df[duration_col] = (df["played_ratio_pct"].clip(lower=0.0) / 100.0) * df["track_length_seconds"].clip(lower=0.0)
+        elif "track_length_seconds" in df.columns:
+            df[duration_col] = df["track_length_seconds"].clip(lower=0.0)
+        else:
+            logger.warning(
+                "Column '%s' not found. Creating default dummy listening durations (30.0s).",
+                duration_col,
+            )
+            df[duration_col] = 30.0
+
+    # 3. Validate essential schema
+    required_cols = [user_col, item_col, timestamp_col, duration_col]
     for col in required_cols:
         if col not in df.columns:
             raise KeyError(f"Missing required column '{col}' in dataset. Available: {list(df.columns)}")
-
-    # Ensure listen_duration_sec exists (for future RL reward fine-tuning)
-    if duration_col not in df.columns:
-        logger.warning(
-            "Column '%s' not found. Creating default dummy listening durations (30.0s).",
-            duration_col,
-        )
-        df[duration_col] = 30.0
 
     # 1. Filter rare items & short sequences
     df = filter_rare_items(

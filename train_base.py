@@ -224,14 +224,14 @@ def evaluate(
 
 
 def generate_synthetic_yambda_data(output_path: Path, num_interactions: int = 5000) -> Path:
-    """Generates synthetic Yambda interaction log for smoke-testing and prototyping."""
+    """Generates synthetic Yambda interaction log matching native schema for smoke-testing."""
     np.random.seed(42)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     num_users = 150
     num_items = 300
 
-    user_ids = [f"user_{np.random.randint(1, num_users + 1):04d}" for _ in range(num_interactions)]
+    uids = [f"user_{np.random.randint(1, num_users + 1):04d}" for _ in range(num_interactions)]
     # Use Zipf-like distribution to simulate music popularity long tail
     item_probs = 1.0 / np.arange(1, num_items + 1) ** 0.8
     item_probs /= item_probs.sum()
@@ -239,17 +239,21 @@ def generate_synthetic_yambda_data(output_path: Path, num_interactions: int = 50
 
     base_time = 1700000000
     timestamps = base_time + np.sort(np.random.randint(0, 86400 * 30, size=num_interactions))
-    durations = np.random.exponential(scale=180.0, size=num_interactions) + 10.0  # seconds
+    track_lengths = np.random.uniform(120.0, 300.0, size=num_interactions)  # seconds
+    played_ratio_pct = np.random.uniform(10.0, 100.0, size=num_interactions)  # percentage
+    is_organic = np.random.choice([True, False], size=num_interactions, p=[0.7, 0.3])
 
     df = pd.DataFrame({
-        "user_id": user_ids,
+        "uid": uids,
         "item_id": items,
         "timestamp": timestamps,
-        "listen_duration_sec": durations,
+        "played_ratio_pct": played_ratio_pct,
+        "track_length_seconds": track_lengths,
+        "is_organic": is_organic,
     })
 
     df.to_parquet(output_path, index=False)
-    print(f"[SyntheticData] Generated {len(df)} interactions at: {output_path}")
+    print(f"[SyntheticData] Generated {len(df)} interactions with native Yambda schema at: {output_path}")
     return output_path
 
 
@@ -264,6 +268,10 @@ def main() -> None:
     parser.add_argument("--processed_dir", type=str, default=default_processed, help="Directory for processed splits")
     parser.add_argument("--output_dir", type=str, default=default_output, help="Directory for model checkpoints")
     parser.add_argument("--synthetic", action="store_true", help="Generate synthetic dataset for testing")
+    parser.add_argument("--user_col", type=str, default="uid", help="User identifier column (default: uid)")
+    parser.add_argument("--item_col", type=str, default="item_id", help="Item identifier column (default: item_id)")
+    parser.add_argument("--timestamp_col", type=str, default="timestamp", help="Timestamp column (default: timestamp)")
+    parser.add_argument("--duration_col", type=str, default="listen_duration_sec", help="Duration column (default: listen_duration_sec)")
     parser.add_argument("--min_item_freq", type=int, default=5, help="Prune items with fewer interactions")
     parser.add_argument("--max_length", type=int, default=64, help="Sequence maximum length")
     parser.add_argument("--n_embd", type=int, default=128, help="Embedding dimension")
@@ -305,6 +313,10 @@ def main() -> None:
         output_dir=args.processed_dir,
         min_item_frequency=args.min_item_freq,
         split_mode=args.split_mode,
+        user_col=args.user_col,
+        item_col=args.item_col,
+        timestamp_col=args.timestamp_col,
+        duration_col=args.duration_col,
     )
 
     # 2. Build PyTorch DataLoaders
@@ -315,6 +327,7 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=True,
         sliding_window=True,
+        user_col=args.user_col,
         num_workers=args.num_workers,
         pin_memory=pin_mem,
     )
@@ -326,6 +339,7 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=False,
         sliding_window=False,
+        user_col=args.user_col,
         num_workers=args.num_workers,
         pin_memory=pin_mem,
     )

@@ -341,6 +341,8 @@ def preprocess_pipeline(
     min_item_frequency: int = 5,
     min_user_interactions: int = 3,
     max_items: Optional[int] = None,
+    subsample_users: Optional[float] = None,
+    seed: int = 42,
     split_mode: Literal["global_temporal", "user_temporal"] = "global_temporal",
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
@@ -410,6 +412,21 @@ def preprocess_pipeline(
     for col in required_cols:
         if col not in df.columns:
             raise KeyError(f"Missing required column '{col}' in dataset. Available: {list(df.columns)}")
+
+    # 4. Optional: Subsample users for rapid prototyping / hyperparameter sweeps
+    if subsample_users is not None and 0.0 < subsample_users < 1.0:
+        unique_users = df[user_col].unique()
+        n_sample = max(1, int(len(unique_users) * subsample_users))
+        rng = np.random.RandomState(seed)
+        sampled_users = set(rng.choice(unique_users, size=n_sample, replace=False))
+        df = df[df[user_col].isin(sampled_users)].copy()
+        logger.info(
+            "Subsampled users: %.1f%% (%d / %d users retained, %d interactions)",
+            subsample_users * 100.0,
+            n_sample,
+            len(unique_users),
+            len(df),
+        )
 
     # 1. Filter rare items & short sequences
     df = filter_rare_items(

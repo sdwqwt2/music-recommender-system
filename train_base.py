@@ -197,6 +197,7 @@ def evaluate(
     device: torch.device,
     use_amp: bool = False,
     top_k: int = 10,
+    max_eval_batches: Optional[int] = None,
 ) -> Dict[str, float]:
     """Evaluates validation loss, Perplexity, HitRate@10, and NDCG@10 using memory-efficient projection."""
     model.eval()
@@ -209,7 +210,9 @@ def evaluate(
     total_eval_samples = 0
     num_batches = 0
 
-    for batch in dataloader:
+    for batch_idx, batch in enumerate(dataloader):
+        if max_eval_batches is not None and max_eval_batches > 0 and batch_idx >= max_eval_batches:
+            break
         batch = batch.to(device)
 
         with torch.amp.autocast(device_type="cuda", enabled=use_amp):
@@ -286,6 +289,35 @@ def generate_synthetic_yambda_data(output_path: Path, num_interactions: int = 50
     return output_path
 
 
+def get_lr_scheduler(
+    optimizer: torch.optim.Optimizer,
+    num_warmup_steps: int,
+    num_training_steps: int,
+    min_lr_ratio: float = 0.01,
+) -> torch.optim.lr_scheduler._LRScheduler:
+    """
+    Creates a learning rate scheduler with linear warmup followed by cosine decay.
+    Tries HuggingFace get_cosine_schedule_with_warmup first, falling back to torch LambdaLR.
+    """
+    try:
+        from transformers import get_cosine_schedule_with_warmup
+        return get_cosine_schedule_with_warmup(
+            optimizer=optimizer,
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=num_training_steps,
+        )
+    except Exception:
+        def lr_lambda(current_step: int):
+            if current_step < num_warmup_steps:
+                return float(current_step) / float(max(1, num_warmup_steps))
+            progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+            cosine_decay = 0.5 * (1.0 + math.cos(math.pi * progress))
+            return max(min_lr_ratio, cosine_decay)
+
+        from torch.optim.lr_scheduler import LambdaLR
+        return LambdaLR(optimizer, lr_lambda)
+
+
 def main() -> None:
     # Auto-detect Kaggle environment
     is_kaggle = os.path.exists("/kaggle") or "KAGGLE_KERNEL_RUN_TYPE" in os.environ
@@ -303,13 +335,19 @@ def main() -> None:
     parser.add_argument("--duration_col", type=str, default="listen_duration_sec", help="Duration column (default: listen_duration_sec)")
     parser.add_argument("--min_item_freq", type=int, default=5, help="Prune items with fewer interactions")
     parser.add_argument("--max_length", type=int, default=64, help="Sequence maximum length")
-    parser.add_argument("--n_embd", type=int, default=128, help="Embedding dimension")
-    parser.add_argument("--n_layer", type=int, default=3, help="Transformer layers")
-    parser.add_argument("--n_head", type=int, default=4, help="Attention heads")
+    parser.add_argument("--n_embd", type=int, default=256, help="Embedding dimension (default: 256)")
+    parser.add_argument("--n_layer", type=int, default=4, help="Transformer layers (default: 4)")
+    parser.add_argument("--n_head", type=int, default=8, help="Attention heads (default: 8)")
     parser.add_argument("--batch_size", type=int, default=32, help="Micro-batch size (default: 32)")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of steps to accumulate gradients (default: 4, effective batch = batch_size * grad_accum)")
     parser.add_argument("--max_items", type=int, default=100000, help="Cap top-N items by frequency to bound vocabulary (default: 100000)")
-    parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate")
+    parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate (default: 5e-4)")
+    parser.add_argument("--weight_decay", type=float, default=0.01, help="AdamW weight decay (default: 0.01)")
+    parser.add_argument("--warmup_ratio", type=float, default=0.05, help="Ratio of warmup steps (default: 0.05 = 5%)")
+    parser.add_argument("--subsample_users", type=float, default=None, help="Fraction of users to randomly sample (e.g. 0.2 for 20%) for rapid prototyping")
+    parser.add_argument("--early_stopping_patience", type=int, default=3, help="Early stopping patience in epochs (default: 3, 0 to disable)")
+    parser.add_argument("--eval_max_batches", type=int, default=0, help="Max batches for validation (0 = evaluate entire validation set)")
+    parser.add_argument("--resume_from", type=str, default=None, help="Path to checkpoint (.pt) to load weights from")
     parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--split_mode", type=str, default="global_temporal", choices=["global_temporal", "user_temporal"])
     parser.add_argument("--fp16", action="store_true", help="Enable Mixed Precision training (NVIDIA CUDA)")
@@ -344,6 +382,7 @@ def main() -> None:
         output_dir=args.processed_dir,
         min_item_frequency=args.min_item_freq,
         max_items=args.max_items,
+        subsample_users=args.subsample_users,
         split_mode=args.split_mode,
         user_col=args.user_col,
         item_col=args.item_col,
@@ -385,11 +424,37 @@ def main() -> None:
         n_head=args.n_head,
     ).to(device)
 
-    # 4. Optimization Setup
-    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
+    # Optional: Resume / transfer from existing checkpoint
+    if args.resume_from:
+        resume_path = Path(args.resume_from)
+        if resume_path.exists():
+            print(f"[Checkpoint] Loading weights from: {resume_path}")
+            checkpoint = torch.load(resume_path, map_location=device)
+            state_dict = checkpoint.get("model_state_dict", checkpoint)
+            curr_state = model.state_dict()
+            loaded_keys = []
+            for k, v in state_dict.items():
+                if k in curr_state and curr_state[k].shape == v.shape:
+                    curr_state[k] = v
+                    loaded_keys.append(k)
+                else:
+                    print(f"[Checkpoint] Skipping key {k} (mismatch)")
+            model.load_state_dict(curr_state)
+            print(f"[Checkpoint] Restored {len(loaded_keys)} compatible weight tensors.")
+        else:
+            print(f"[Checkpoint] Warning: Checkpoint path not found: {resume_path}")
+
+    # 4. Optimization Setup with Warmup + Cosine Decay
+    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     effective_steps_per_epoch = max(1, len(train_loader) // args.gradient_accumulation_steps + (1 if len(train_loader) % args.gradient_accumulation_steps != 0 else 0))
     total_steps = effective_steps_per_epoch * args.epochs
-    scheduler = CosineAnnealingLR(optimizer, T_max=max(1, total_steps), eta_min=1e-5)
+    warmup_steps = int(total_steps * args.warmup_ratio)
+    scheduler = get_lr_scheduler(
+        optimizer=optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=total_steps,
+    )
+    print(f"[Scheduler] Warmup: {warmup_steps} steps | Total: {total_steps} steps (Warmup ratio: {args.warmup_ratio * 100:.1f}%)")
 
     # 5. WandB Logging Setup
     wandb_run = None
@@ -405,10 +470,13 @@ def main() -> None:
                     "n_layer": args.n_layer,
                     "n_head": args.n_head,
                     "lr": args.lr,
+                    "weight_decay": args.weight_decay,
+                    "warmup_ratio": args.warmup_ratio,
                     "batch_size": args.batch_size,
                     "gradient_accumulation_steps": args.gradient_accumulation_steps,
                     "effective_batch_size": args.batch_size * args.gradient_accumulation_steps,
                     "max_items": args.max_items,
+                    "subsample_users": args.subsample_users,
                     "epochs": args.epochs,
                     "split_mode": args.split_mode,
                     "fp16": use_amp,
@@ -420,11 +488,13 @@ def main() -> None:
 
     # 6. Training & Validation Loop
     best_hr = -1.0
+    patience_counter = 0
     best_checkpoint_path = output_dir / "best_gpt2_recsys.pt"
 
     effective_batch = args.batch_size * args.gradient_accumulation_steps
     print("\n" + "=" * 60)
     print(f"Starting Training: {args.epochs} Epochs | Micro-Batch: {args.batch_size} (Effective: {effective_batch}) | Device: {device} | FP16: {use_amp}")
+    print(f"Architecture: n_embd={args.n_embd}, n_layer={args.n_layer}, n_head={args.n_head} | LR: {args.lr}")
     print("=" * 60)
 
     for epoch in range(1, args.epochs + 1):
@@ -441,7 +511,14 @@ def main() -> None:
             gradient_accumulation_steps=args.gradient_accumulation_steps,
         )
 
-        val_metrics = evaluate(model=model, dataloader=val_loader, device=device, use_amp=use_amp, top_k=10)
+        val_metrics = evaluate(
+            model=model,
+            dataloader=val_loader,
+            device=device,
+            use_amp=use_amp,
+            top_k=10,
+            max_eval_batches=args.eval_max_batches if args.eval_max_batches > 0 else None,
+        )
         elapsed = time.time() - t0
 
         val_loss = val_metrics["val_loss"]
@@ -466,9 +543,10 @@ def main() -> None:
                 "learning_rate": optimizer.param_groups[0]["lr"],
             })
 
-        # Save Best Model Checkpoint
+        # Checkpoint & Early Stopping logic
         if val_hr > best_hr:
             best_hr = val_hr
+            patience_counter = 0
             torch.save(
                 {
                     "epoch": epoch,
@@ -488,6 +566,11 @@ def main() -> None:
                 best_checkpoint_path,
             )
             print(f"  --> Saved new best checkpoint (HR@10: {val_hr:.4f}) to: {best_checkpoint_path}")
+        else:
+            patience_counter += 1
+            if args.early_stopping_patience > 0 and patience_counter >= args.early_stopping_patience:
+                print(f"\n[Early Stopping] No HR@10 improvement for {patience_counter} consecutive epochs. Stopping at epoch {epoch}.")
+                break
 
     print("\n" + "=" * 60)
     print(f"Training Complete! Best HR@10: {best_hr:.4f}")

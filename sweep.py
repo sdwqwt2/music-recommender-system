@@ -273,7 +273,17 @@ def main() -> None:
             duration_col=args.duration_col,
         )
 
-    print(f"[Data] Ready: Train interactions: {len(train_df):,} | Val interactions: {len(val_df):,} | Vocab: {tokenizer.num_items:,}")
+    results_csv = output_dir / "sweep_results.csv"
+    existing_trials = {}
+    if results_csv.exists():
+        try:
+            prev_df = pd.read_csv(results_csv)
+            for _, row in prev_df.iterrows():
+                tid = int(row["trial_id"])
+                existing_trials[tid] = row.to_dict()
+            print(f"[Resume] Found existing sweep results with {len(existing_trials)} completed trials in: {results_csv}")
+        except Exception as e:
+            print(f"[Resume] Could not read existing results CSV ({e}). Starting fresh.")
 
     # 2. Run Sweep Trials
     rng = random.Random(args.seed)
@@ -281,6 +291,11 @@ def main() -> None:
 
     for trial_idx in range(1, args.num_trials + 1):
         config = sample_hyperparameters(rng)
+        if trial_idx in existing_trials:
+            print(f"\n[Resume] Trial {trial_idx} already finished (best HR@10: {existing_trials[trial_idx].get('best_val_hr10')}). Skipping.")
+            results.append(existing_trials[trial_idx])
+            continue
+
         trial_result = run_trial(
             trial_id=trial_idx,
             config=config,
@@ -299,7 +314,7 @@ def main() -> None:
         # Incrementally save results CSV after every trial
         results_df = pd.DataFrame(results)
         results_df.sort_values(by="best_val_hr10", ascending=False, inplace=True)
-        results_df.to_csv(output_dir / "sweep_results.csv", index=False)
+        results_df.to_csv(results_csv, index=False)
 
     # 3. Final Summary & Best Config Persistence
     results_df = pd.DataFrame(results)

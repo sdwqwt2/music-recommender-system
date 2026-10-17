@@ -147,7 +147,7 @@ def train_one_epoch(
     num_batches = 0
     optimizer.zero_grad()
 
-    progress_bar = tqdm(dataloader, desc=f"Epoch {epoch} [Train]", leave=False)
+    progress_bar = tqdm(dataloader, desc=f"Epoch {epoch} [Train]", leave=False, mininterval=5.0)
     for step, batch in enumerate(progress_bar, start=1):
         batch = batch.to(device)
 
@@ -185,7 +185,8 @@ def train_one_epoch(
         batch_loss = loss.item() * gradient_accumulation_steps
         total_loss += batch_loss
         num_batches += 1
-        progress_bar.set_postfix({"loss": f"{batch_loss:.4f}"})
+        if step % 25 == 0 or step == len(dataloader):
+            progress_bar.set_postfix({"loss": f"{batch_loss:.4f}"})
 
     return total_loss / max(1, num_batches)
 

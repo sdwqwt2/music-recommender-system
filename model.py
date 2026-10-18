@@ -124,6 +124,11 @@ class RecSysGPT2(nn.Module):
             num_trainable,
         )
 
+    @property
+    def vocab_size(self) -> int:
+        """Returns the total vocabulary size (num_items + 1 including <PAD>)."""
+        return self.config.vocab_size
+
     def forward(
         self,
         input_ids: torch.Tensor,

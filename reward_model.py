@@ -71,7 +71,7 @@ class RecSysRewardModel(nn.Module):
         super().__init__()
         self.backbone = backbone
         self.n_embd = backbone.config.n_embd
-        self.vocab_size = backbone.vocab_size
+        self.vocab_size = getattr(backbone, "vocab_size", getattr(backbone.config, "vocab_size", backbone.num_items + 1))
         self.pad_token_id = backbone.pad_token_id
         self.freeze_backbone = freeze_backbone
 
@@ -119,17 +119,19 @@ class RecSysRewardModel(nn.Module):
         # Obtain contextual hidden representations from GPT-2
         if self.freeze_backbone:
             with torch.no_grad():
-                transformer_outputs = self.backbone.transformer(
+                backbone_outputs = self.backbone.transformer.transformer(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
+                    return_dict=True,
                 )
-                hidden_states = transformer_outputs[0]  # [B, L, n_embd]
+                hidden_states = backbone_outputs.last_hidden_state  # [B, L, n_embd]
         else:
-            transformer_outputs = self.backbone.transformer(
+            backbone_outputs = self.backbone.transformer.transformer(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
+                return_dict=True,
             )
-            hidden_states = transformer_outputs[0]  # [B, L, n_embd]
+            hidden_states = backbone_outputs.last_hidden_state  # [B, L, n_embd]
 
         # Predict completion ratio across sequence positions: [B, L, 1] -> [B, L]
         predicted_ratio = self.value_head(hidden_states).squeeze(-1)
@@ -166,11 +168,12 @@ class RecSysRewardModel(nn.Module):
         Returns:
             reward_scores: FloatTensor [B, vocab_size]
         """
-        transformer_outputs = self.backbone.transformer(
+        backbone_outputs = self.backbone.transformer.transformer(
             input_ids=input_ids,
             attention_mask=attention_mask,
+            return_dict=True,
         )
-        hidden_states = transformer_outputs[0]
+        hidden_states = backbone_outputs.last_hidden_state
         # Final position token representation
         seq_lens = torch.clamp(attention_mask.sum(dim=-1) - 1, min=0)
         batch_idx = torch.arange(input_ids.size(0), device=input_ids.device)

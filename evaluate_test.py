@@ -42,8 +42,14 @@ def evaluate_full_test_metrics(
     device: torch.device,
     use_amp: bool = False,
     cutoffs: List[int] = [5, 10, 20],
-) -> Dict[str, float]:
-    """Computes comprehensive ranking metrics over the full item catalog."""
+    min_engaged_sec: float = 30.0,
+) -> Dict[str, Any]:
+    """
+    Computes Dual-Track ranking metrics over the full item catalog:
+    1. Raw Benchmark: All held-out targets (standard baseline comparability).
+    2. Engaged Benchmark: Only targets where user listened >= min_engaged_sec (satisfied listens).
+    3. Duration-Weighted NDCG: Relevance scaled by listen duration completion.
+    """
     model.eval()
     if device.type == "cuda":
         torch.cuda.empty_cache()
@@ -51,19 +57,28 @@ def evaluate_full_test_metrics(
     max_k = max(cutoffs)
     total_loss = 0.0
     num_batches = 0
-    total_valid = 0
 
-    hits = {k: 0.0 for k in cutoffs}
-    ndcg = {k: 0.0 for k in cutoffs}
-    mrr = 0.0
+    # Raw counters
+    total_raw = 0
+    raw_hits = {k: 0.0 for k in cutoffs}
+    raw_ndcg = {k: 0.0 for k in cutoffs}
+    raw_mrr = 0.0
+
+    # Engaged counters (duration >= min_engaged_sec)
+    total_engaged = 0
+    engaged_hits = {k: 0.0 for k in cutoffs}
+    engaged_ndcg = {k: 0.0 for k in cutoffs}
+    engaged_mrr = 0.0
+
+    # Duration-weighted NDCG
+    d_ndcg = {k: 0.0 for k in cutoffs}
 
     pad_id = model.pad_token_id
 
-    for batch in tqdm(dataloader, desc="Evaluating Test Set", leave=False):
+    for batch in tqdm(dataloader, desc="Evaluating Dual-Track Test Set", leave=False, mininterval=5.0):
         batch = batch.to(device)
 
         with torch.amp.autocast(device_type="cuda", enabled=use_amp):
-            # Projection at last valid position only
             output = model(
                 input_ids=batch.input_ids,
                 attention_mask=batch.attention_mask,
@@ -74,10 +89,11 @@ def evaluate_full_test_metrics(
         total_loss += output.loss.item()
         num_batches += 1
 
-        # Extract target items at last position
+        # Extract target items and durations at last valid position
         seq_lens = torch.clamp(batch.attention_mask.sum(dim=-1) - 1, min=0)
         batch_idx = torch.arange(batch.labels.size(0), device=device)
         targets = batch.labels[batch_idx, seq_lens]
+        durations = batch.durations[batch_idx, seq_lens]
 
         logits = output.logits
         if logits.dim() == 3:
@@ -89,36 +105,65 @@ def evaluate_full_test_metrics(
             continue
 
         targets = targets[valid_mask]
+        durations = durations[valid_mask]
         logits = logits[valid_mask]
         n_valid = targets.size(0)
-        total_valid += n_valid
 
         _, topk_indices = torch.topk(logits, k=max_k, dim=-1)
 
         for i in range(n_valid):
             target = targets[i].item()
+            dur = max(0.0, durations[i].item())
             preds = topk_indices[i].tolist()
+            is_engaged = (dur >= min_engaged_sec)
+
+            # Relevance score normalized by 3-minute standard completion
+            rel_score = min(1.0, dur / 180.0)
+
+            total_raw += 1
+            if is_engaged:
+                total_engaged += 1
 
             if target in preds:
                 rank = preds.index(target) + 1
-                mrr += 1.0 / rank
+                recip_rank = 1.0 / rank
+
+                # Raw metrics
+                raw_mrr += recip_rank
                 for k in cutoffs:
                     if rank <= k:
-                        hits[k] += 1.0
-                        ndcg[k] += 1.0 / math.log2(rank + 1)
+                        raw_hits[k] += 1.0
+                        raw_ndcg[k] += 1.0 / math.log2(rank + 1)
+                        # Duration-weighted NDCG
+                        d_ndcg[k] += rel_score / math.log2(rank + 1)
+
+                # Engaged metrics
+                if is_engaged:
+                    engaged_mrr += recip_rank
+                    for k in cutoffs:
+                        if rank <= k:
+                            engaged_hits[k] += 1.0
+                            engaged_ndcg[k] += 1.0 / math.log2(rank + 1)
 
     avg_loss = total_loss / max(1, num_batches)
     ppl = math.exp(min(avg_loss, 20.0))
 
-    results = {
+    results: Dict[str, Any] = {
         "test_loss": round(avg_loss, 4),
         "test_perplexity": round(ppl, 2),
-        "test_mrr": round(mrr / max(1, total_valid), 4),
-        "total_test_samples": total_valid,
+        "total_raw_samples": total_raw,
+        "total_engaged_samples": total_engaged,
+        "engaged_percentage": round((total_engaged / max(1, total_raw)) * 100.0, 1),
+        "raw_mrr": round(raw_mrr / max(1, total_raw), 4),
+        "engaged_mrr": round(engaged_mrr / max(1, total_engaged), 4),
     }
+
     for k in cutoffs:
-        results[f"test_hr@{k}"] = round(hits[k] / max(1, total_valid), 4)
-        results[f"test_ndcg@{k}"] = round(ndcg[k] / max(1, total_valid), 4)
+        results[f"raw_hr@{k}"] = round(raw_hits[k] / max(1, total_raw), 4)
+        results[f"raw_ndcg@{k}"] = round(raw_ndcg[k] / max(1, total_raw), 4)
+        results[f"engaged_hr@{k}"] = round(engaged_hits[k] / max(1, total_engaged), 4)
+        results[f"engaged_ndcg@{k}"] = round(engaged_ndcg[k] / max(1, total_engaged), 4)
+        results[f"duration_ndcg@{k}"] = round(d_ndcg[k] / max(1, total_raw), 4)
 
     return results
 
@@ -265,22 +310,37 @@ def main() -> None:
         cutoffs=[5, 10, 20],
     )
 
-    print("\n" + "-" * 60)
-    print("FINAL HELD-OUT TEST METRICS:")
-    print(f"  Test Loss:        {metrics['test_loss']:.4f}")
-    print(f"  Perplexity:       {metrics['test_perplexity']:.2f}")
-    print(f"  MRR:              {metrics['test_mrr']:.4f}")
-    print(f"  HR@5:             {metrics['test_hr@5']:.4f}  |  NDCG@5:  {metrics['test_ndcg@5']:.4f}")
-    print(f"  HR@10:            {metrics['test_hr@10']:.4f}  |  NDCG@10: {metrics['test_ndcg@10']:.4f}")
-    print(f"  HR@20:            {metrics['test_hr@20']:.4f}  |  NDCG@20: {metrics['test_ndcg@20']:.4f}")
-    print(f"  Evaluated on {metrics['total_test_samples']:,} test sequences.")
-    print("-" * 60)
+    print("\n" + "=" * 75)
+    print("DUAL-TRACK HELD-OUT TEST METRICS (FULL CATALOG RANKING):")
+    print("=" * 75)
+    print(f"Total Test Users: {metrics['total_raw_samples']:,} | Engaged Plays (>=30s): {metrics['total_engaged_samples']:,} ({metrics['engaged_percentage']}%)")
+    print(f"Test Loss: {metrics['test_loss']:.4f} | Perplexity: {metrics['test_perplexity']:.2f}")
+    print("-" * 75)
+    print(f"{'Metric':<18} | {'Raw Benchmark (All)':<22} | {'Engaged Plays (>=30s)':<22} | {'Lift'}")
+    print("-" * 75)
+    for k in [5, 10, 20]:
+        raw_h = metrics[f"raw_hr@{k}"]
+        eng_h = metrics[f"engaged_hr@{k}"]
+        lift_val = ((eng_h - raw_h) / max(0.0001, raw_h)) * 100.0
+        lift_str = f"+{lift_val:.1f}%" if lift_val >= 0 else f"{lift_val:.1f}%"
+        print(f"HitRate@{k:<10} | {raw_h:<22.4f} | {eng_h:<22.4f} | {lift_str}")
+    print("-" * 75)
+    for k in [5, 10, 20]:
+        raw_n = metrics[f"raw_ndcg@{k}"]
+        eng_n = metrics[f"engaged_ndcg@{k}"]
+        lift_val = ((eng_n - raw_n) / max(0.0001, raw_n)) * 100.0
+        lift_str = f"+{lift_val:.1f}%" if lift_val >= 0 else f"{lift_val:.1f}%"
+        print(f"NDCG@{k:<13} | {raw_n:<22.4f} | {eng_n:<22.4f} | {lift_str}")
+    print("-" * 75)
+    print(f"MRR                | {metrics['raw_mrr']:<22.4f} | {metrics['engaged_mrr']:<22.4f} |")
+    print(f"Duration-NDCG@10   | {metrics['duration_ndcg@10']:<22.4f} | (Relevance scaled by listen duration)")
+    print("=" * 75)
 
     # Save test metrics
     metrics_path = ckpt_path.parent / "test_evaluation_metrics.json"
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2)
-    print(f"[Export] Saved test metrics to: {metrics_path}")
+    print(f"[Export] Saved dual-track test metrics to: {metrics_path}")
 
     # 5. Qualitative Inspection
     run_qualitative_inspection(

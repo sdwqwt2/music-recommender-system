@@ -14,6 +14,8 @@ ENV/
 data/
 checkpoints/
 wandb/
+sweep_results/
+reports/
 *.parquet
 *.csv
 

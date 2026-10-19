@@ -254,11 +254,37 @@ def main() -> None:
     args = parser.parse_args()
 
     device = get_device()
-    processed_dir = Path(args.processed_dir)
-    ckpt_path = Path(args.checkpoint_path)
 
-    if not ckpt_path.exists():
-        raise FileNotFoundError(f"Checkpoint not found at: {ckpt_path}")
+    # Resilient Processed Directory Resolution
+    processed_candidates = [
+        Path(args.processed_dir),
+        Path("/kaggle/working/downloaded_weights/data/processed"),
+        Path("downloaded_weights/data/processed"),
+        Path("/kaggle/working/data/processed"),
+        Path("data/processed"),
+    ]
+    processed_dir = None
+    for p in processed_candidates:
+        if (p / "test_interactions.parquet").exists():
+            processed_dir = p
+            break
+    if processed_dir is None:
+        raise FileNotFoundError(f"Could not locate test_interactions.parquet in: {processed_candidates}")
+
+    # Resilient Checkpoint Resolution
+    ckpt_candidates = [
+        Path(args.checkpoint_path),
+        Path("/kaggle/working/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("checkpoints/best_gpt2_recsys.pt"),
+    ]
+    ckpt_path = None
+    for c in ckpt_candidates:
+        if c.exists():
+            ckpt_path = c
+            break
+    if ckpt_path is None:
+        raise FileNotFoundError(f"Checkpoint not found in any expected location: {ckpt_candidates}")
 
     # 1. Load Preprocessed Data
     train_df = pd.read_parquet(processed_dir / "train_interactions.parquet")

@@ -143,24 +143,58 @@ Kaggle provides **30 hours/week of free NVIDIA GPU (T4 x 2 or P100)** with 16GB 
 
 ## 🔮 Phase 2: Direct Preference Optimization (DPO) & RL Alignment
 
-In real-world music interaction logs, **30%–45% of recorded events represent user skips** (tracks abandoned in $< 30$s or $0.0$s). Supervised Cross-Entropy (MLE) next-item prediction penalizes models for failing to predict negative events (tracks users disliked and skipped).
+In real-world music streaming logs, **30%–45% of recorded interactions represent user skips** (tracks abandoned in $< 30$s or $0.0$s). Standard next-token Cross-Entropy (MLE) training penalizes the generative model for failing to recommend tracks that the user ultimately disliked and skipped. Aligning recommendations with true user satisfaction and listening duration requires reinforcement learning.
 
-To align the recommender policy with genuine user engagement and listening duration, Phase 2 implements **Direct Preference Optimization (DPO)** directly over sequential interaction logs:
+---
 
-### 1. DPO Mathematical Formulation
-User trajectories provide natural pairwise preference signals:
-- **Winning Candidate ($y_w$):** Satisfied, engaged listens ($\text{duration} \ge 30\text{s}$).
-- **Losing Candidate ($y_l$):** Dispreferred, instant skips ($\text{duration} < 30\text{s}$).
+### 1. Phase 2.1: The Initial Critic (Reward Model) Approach & Encountered Plateau
 
-Given user context $s_t = [i_1, \dots, i_t]$, DPO directly optimizes the policy $\pi_\theta$ against the frozen Phase 1 base policy $\pi_{\text{ref}}$:
+We initially formulated Phase 2 as an **Actor-Critic / Two-Stage Value Network** architecture (`reward_model.py`). An MLP Critic $Q(s_t, a_{t+1})$ was trained on top of the frozen Phase 1 GPT-2 contextual hidden states $h_t$ to jointly predict:
+1. **Binary Skip Probability:** $P(\text{skip} < 30\text{s} \mid s_t, a_{t+1})$ via `BCEWithLogitsLoss`.
+2. **Engaged Completion Ratio:** Normalized duration $R \in [0, 1]$ for non-skipped tracks ($\ge 30\text{s}$) via `SmoothL1Loss`.
+
+#### The Observed Training Plateau:
+When training the Critic for 5 epochs on the full interaction dataset, the model encountered a severe empirical plateau:
+
+```text
+=================================================================
+TRAINING PHASE 2 STATE-ACTION CRITIC (REWARD MODEL): 5 EPOCHS
+Trainable Parameters: 509,186 | Skip Cutoff: < 30.0s | Max Duration: 180.0s
+=================================================================
+Reward Epoch 01/05 [313.7s] | Train Loss: 0.6293 | Val Loss: 0.6270 | Skip Acc: 76.1% | Engaged MAE: 56.4s | Composite MAE: 82.9s
+Reward Epoch 02/05 [312.5s] | Train Loss: 0.6084 | Val Loss: 0.6237 | Skip Acc: 75.9% | Engaged MAE: 55.9s | Composite MAE: 82.8s
+Reward Epoch 03/05 [314.5s] | Train Loss: 0.6026 | Val Loss: 0.6213 | Skip Acc: 76.1% | Engaged MAE: 55.6s | Composite MAE: 82.3s
+Reward Epoch 04/05 [315.6s] | Train Loss: 0.5990 | Val Loss: 0.6211 | Skip Acc: 75.8% | Engaged MAE: 55.6s | Composite MAE: 82.6s
+Reward Epoch 05/05 [312.6s] | Train Loss: 0.5970 | Val Loss: 0.6211 | Skip Acc: 75.7% | Engaged MAE: 55.6s | Composite MAE: 82.5s
+=================================================================
+```
+
+#### Diagnostic Breakdown:
+- **Loss Stagnation ($\Delta = -0.0059$):** Validation loss flattened completely by Epoch 3 ($0.6270 \to 0.6211$), while training loss slowly declined ($0.6293 \to 0.5970$), revealing a capacity and generalization bottleneck.
+- **Trivial Majority Prior:** Skip accuracy stagnated at $\sim 75.7\%-76.1\%$, which corresponds to the empirical base rate of engaged listens in the split. The BCE loss ($0.543 \to 0.523$) mirrored the marginal binary entropy ($H(0.24) \approx 0.551$), indicating the Critic was outputting the prior mean rather than learning fine-grained item discrimination.
+- **Representation Bottleneck:** With the $37.8\text{M}$ item embeddings (`wte`) frozen from Phase 1 next-token pretraining, the compact $509\text{K}$ parameter MLP lacked the parameter capacity to infer duration and skip propensities across $98,504$ discrete tracks from logged factual actions alone.
+
+---
+
+### 2. Phase 2.2: The Pivot to Direct Preference Optimization (DPO)
+
+Due to the Critic's representation plateau and offline selection bias, we pivoted to **Direct Preference Optimization (DPO)** (`train_dpo.py`, `dpo_dataset.py`).
+
+DPO eliminates intermediate value-function approximation entirely. In user listening histories, implicit preferences exist naturally:
+- **Winning Item ($y_w$):** Satisfied, engaged listen ($\text{duration} \ge 30\text{s}$).
+- **Losing Item ($y_l$):** Dispreferred, skipped track ($\text{duration} < 30\text{s}$ mined from the user's session or catalog fallback).
+
+#### Mathematical Formulation:
+Given user prefix context $s_t = [i_1, \dots, i_t]$, DPO directly optimizes the policy $\pi_\theta$ against the frozen Phase 1 base policy $\pi_{\text{ref}}$:
 
 $$\mathcal{L}_{\text{DPO}}(\theta; \pi_{\text{ref}}) = - \mathbb{E}_{(s, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w \mid s)}{\pi_{\text{ref}}(y_w \mid s)} - \beta \log \frac{\pi_\theta(y_l \mid s)}{\pi_{\text{ref}}(y_l \mid s)} \right) \right] + \gamma \mathcal{L}_{\text{SFT}}(y_w \mid s)$$
 
-- **$\beta$ (KL constraint):** Bounds policy drift from the pre-trained distribution (default: $0.1$).
 - **Implicit Reward Margin:** $r(s, y_w) - r(s, y_l) = \beta \left( \log \frac{\pi_\theta(y_w \mid s)}{\pi_{\text{ref}}(y_w \mid s)} - \log \frac{\pi_\theta(y_l \mid s)}{\pi_{\text{ref}}(y_l \mid s)} \right) > 0$.
-- **Zero Critic Instability:** Completely bypasses the fragile value network / reward model approximation bottleneck.
+- **$\beta$ (KL Constraint):** Governs conservatism against the pre-trained distribution (default: $0.1$).
+- **Memory-Efficient Projection:** Uses `last_token_only=True` to compute logits strictly at the active decision boundary.
+- **Key Advantage:** Stable closed-form optimization with zero value-network collapse, directly penalizing recommendations that lead to instant skips while boosting tracks that sustain high listening duration.
 
-### 2. DPO Training Command
+#### DPO Training Command:
 ```bash
 python train_dpo.py \
     --processed_dir data/processed \
@@ -174,5 +208,6 @@ python train_dpo.py \
     --skip_threshold_sec 30.0 \
     --fp16
 ```
-Outputs `checkpoints/best_dpo_gpt2.pt` ready for held-out Dual-Track evaluation via `evaluate_test.py`.
+Saves `checkpoints/best_dpo_gpt2.pt`, ready for held-out Dual-Track evaluation via `evaluate_test.py`.
+
 

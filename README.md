@@ -141,19 +141,38 @@ Kaggle provides **30 hours/week of free NVIDIA GPU (T4 x 2 or P100)** with 16GB 
 
 ---
 
-## 🔮 Phase 2 Roadmap: Reinforcement Learning (RL) Fine-Tuning
+## 🔮 Phase 2: Direct Preference Optimization (DPO) & RL Alignment
 
+In real-world music interaction logs, **30%–45% of recorded events represent user skips** (tracks abandoned in $< 30$s or $0.0$s). Supervised Cross-Entropy (MLE) next-item prediction penalizes models for failing to predict negative events (tracks users disliked and skipped).
+
+To align the recommender policy with genuine user engagement and listening duration, Phase 2 implements **Direct Preference Optimization (DPO)** directly over sequential interaction logs:
+
+### 1. DPO Mathematical Formulation
+User trajectories provide natural pairwise preference signals:
+- **Winning Candidate ($y_w$):** Satisfied, engaged listens ($\text{duration} \ge 30\text{s}$).
+- **Losing Candidate ($y_l$):** Dispreferred, instant skips ($\text{duration} < 30\text{s}$).
+
+Given user context $s_t = [i_1, \dots, i_t]$, DPO directly optimizes the policy $\pi_\theta$ against the frozen Phase 1 base policy $\pi_{\text{ref}}$:
+
+$$\mathcal{L}_{\text{DPO}}(\theta; \pi_{\text{ref}}) = - \mathbb{E}_{(s, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w \mid s)}{\pi_{\text{ref}}(y_w \mid s)} - \beta \log \frac{\pi_\theta(y_l \mid s)}{\pi_{\text{ref}}(y_l \mid s)} \right) \right] + \gamma \mathcal{L}_{\text{SFT}}(y_w \mid s)$$
+
+- **$\beta$ (KL constraint):** Bounds policy drift from the pre-trained distribution (default: $0.1$).
+- **Implicit Reward Margin:** $r(s, y_w) - r(s, y_l) = \beta \left( \log \frac{\pi_\theta(y_w \mid s)}{\pi_{\text{ref}}(y_w \mid s)} - \log \frac{\pi_\theta(y_l \mid s)}{\pi_{\text{ref}}(y_l \mid s)} \right) > 0$.
+- **Zero Critic Instability:** Completely bypasses the fragile value network / reward model approximation bottleneck.
+
+### 2. DPO Training Command
+```bash
+python train_dpo.py \
+    --processed_dir data/processed \
+    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
+    --output_dir checkpoints \
+    --epochs 5 \
+    --batch_size 64 \
+    --lr 5e-5 \
+    --beta 0.1 \
+    --sft_weight 0.1 \
+    --skip_threshold_sec 30.0 \
+    --fp16
 ```
-Phase 1: Supervised Next-Item Prediction (Causal GPT-2 Pretraining)
-  │
-  ▼
-Phase 2: Markov Decision Process (MDP) RL Fine-Tuning
-  ├── State (s_t):      Contextual hidden state h_t from RecSysGPT2.get_last_action_states()
-  ├── Action (a_t):     Recommended item token index a_t \in {1, ..., |\mathcal{V}|}
-  ├── Reward (r_t):     Function of listen_duration_sec:
-  │                     r_t = \log(1 + listen_duration_sec) - penalty_{skip}
-  └── Policy Optimization:
-        - Value Network (Critic) initialized on top of h_t
-        - PPO / REINFORCE with KL-divergence penalty against Phase 1 Base Policy:
-          L_{RL}(\theta) = \mathbb{E} [ r_t - \beta D_{KL}(\pi_\theta || \pi_{\text{base}}) ]
-```
+Outputs `checkpoints/best_dpo_gpt2.pt` ready for held-out Dual-Track evaluation via `evaluate_test.py`.
+

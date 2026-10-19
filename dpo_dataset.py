@@ -89,6 +89,7 @@ class DPORecDataset(Dataset):
         history_df: Optional[pd.DataFrame] = None,
         max_length: int = 64,
         skip_threshold_sec: float = 30.0,
+        max_pairs_per_user: int = 2,
         user_col: str = "uid",
         item_token_col: str = "item_token",
         timestamp_col: str = "timestamp",
@@ -99,6 +100,7 @@ class DPORecDataset(Dataset):
         super().__init__()
         self.max_length = max_length
         self.skip_threshold_sec = skip_threshold_sec
+        self.max_pairs_per_user = max_pairs_per_user
         self.pad_token_id = pad_token_id
         self.rng = np.random.RandomState(seed)
 
@@ -144,12 +146,18 @@ class DPORecDataset(Dataset):
         timestamp_col: str,
         duration_col: str,
     ) -> None:
-        sorted_df = df.sort_values(by=[user_col, timestamp_col]).reset_index(drop=True)
-        has_duration = duration_col in sorted_df.columns
-
-        grouped = sorted_df.groupby(user_col)
+        # Preprocessed dataset is already chronologically sorted by user.
+        # Using sort=False in groupby avoids a redundant and expensive 33-million row re-sort!
+        grouped = df.groupby(user_col, sort=False)
+        has_duration = duration_col in df.columns
         total_pairs = 0
         skipped_users = 0
+
+        logger.info(
+            "Mining high-signal DPO pairs from %d user sessions (max %d pairs/user)...",
+            len(grouped),
+            self.max_pairs_per_user,
+        )
 
         for user_id, group in grouped:
             item_seq = group[item_token_col].values.astype(np.int64)
@@ -167,11 +175,15 @@ class DPORecDataset(Dataset):
             user_skip_indices = np.where(dur_seq < self.skip_threshold_sec)[0]
             user_skipped_items = item_seq[user_skip_indices]
 
-            # Iterate through trajectory to form (prefix, winning_item, losing_item)
-            for t in range(1, len(item_seq)):
-                prefix_items = item_seq[:t]
+            # Mine backwards from the most recent interactions (highest context fidelity up to max_length)
+            user_pairs = 0
+            for t in range(len(item_seq) - 1, 0, -1):
+                if user_pairs >= self.max_pairs_per_user:
+                    break
+
                 current_item = item_seq[t]
                 current_dur = dur_seq[t]
+                prefix_items = item_seq[:t]
                 is_engaged = current_dur >= self.skip_threshold_sec
 
                 if is_engaged:
@@ -201,6 +213,7 @@ class DPORecDataset(Dataset):
                             "win_dur": win_dur,
                             "lose_dur": lose_dur,
                         })
+                        user_pairs += 1
                         total_pairs += 1
 
                 else:
@@ -224,13 +237,13 @@ class DPORecDataset(Dataset):
                                 "win_dur": win_dur,
                                 "lose_dur": lose_dur,
                             })
+                            user_pairs += 1
                             total_pairs += 1
 
         logger.info(
-            "DPO Pairwise Mining Complete: %d pairs extracted from %d users (%d users skipped due to <2 events).",
+            "DPO Pairwise Mining Complete: %d high-signal pairs extracted from %d users.",
             len(self.samples),
             len(grouped),
-            skipped_users,
         )
 
     def __len__(self) -> int:
@@ -291,6 +304,7 @@ def create_dpo_dataloader(
     batch_size: int = 64,
     shuffle: bool = True,
     skip_threshold_sec: float = 30.0,
+    max_pairs_per_user: int = 2,
     user_col: str = "uid",
     num_workers: int = 0,
     pin_memory: bool = False,
@@ -303,6 +317,7 @@ def create_dpo_dataloader(
         history_df=history_df,
         max_length=max_length,
         skip_threshold_sec=skip_threshold_sec,
+        max_pairs_per_user=max_pairs_per_user,
         user_col=user_col,
         pad_token_id=pad_token_id,
         seed=seed,

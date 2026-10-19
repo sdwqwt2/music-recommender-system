@@ -21,3 +21,6 @@ reports/
 
 # OS
 .DS_Store
+
+# Local Task Description (Untracked)
+TASK_DESCRIPTION.md

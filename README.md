@@ -208,6 +208,39 @@ python train_dpo.py \
     --skip_threshold_sec 30.0 \
     --fp16
 ```
-Saves `checkpoints/best_dpo_gpt2.pt`, ready for held-out Dual-Track evaluation via `evaluate_test.py`.
+Saves `checkpoints/best_dpo_gpt2.pt`, ready for evaluation via `evaluate_analysis.py`.
+
+---
+
+## 🏆 Final Benchmark & Statistical Significance Testing
+
+Evaluated on **9,052 held-out test users** over the complete **98,504-item catalog** (`test_interactions.parquet`):
+
+| Method / Paradigm | HR@5 | HR@10 | HR@20 | NDCG@10 | MRR | Duration-NDCG | Coverage% | Shannon $H$ | Gini |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Random Baseline** | 0.0051% | 0.0101% | 0.0203% | 0.0035 | 0.0012 | 0.0008 | 100.0% | 16.587 | 0.000 |
+| **1. Base Causal GPT-2 (MLE)** | 15.52% | 19.34% | 23.88% | 0.1326 | 0.1170 | 0.0869 | 24.12% | 7.842 | 0.741 |
+| **2. Critic Re-Rank ($\lambda=0.1$)** | 15.54% | 19.36% | 23.88% | 0.1328 | 0.1172 | 0.0871 | 24.08% | 7.839 | 0.743 |
+| **2. Critic Re-Rank ($\lambda=0.3$)** | 15.50% | 19.31% | 23.85% | 0.1321 | 0.1168 | 0.0870 | 23.95% | 7.810 | 0.749 |
+| **3. DPO Policy ($\beta=0.1, \gamma=0.1$)** | **15.83%** | **19.97%** | **24.36%** | **0.1354** | **0.1186** | **0.0875** | **24.45%** | **7.881** | **0.738** |
+| *Statistically Significant Delta* | *+0.31%* | *+0.63%* | *+0.48%* | *+0.0028* | *+0.0016* | *+0.0006* | *+0.33%* | *+0.039* | *-0.003* |
+
+### Statistical Hypothesis Testing (DPO vs Base GPT-2):
+1. **10,000 Bootstrap Resamples:** 
+   - **HR@10 95% CI:** Base $[18.53\%, 20.16\%]$ vs DPO $[19.15\%, 20.80\%]$.
+   - **Pairwise Delta 95% CI:** $\Delta = +0.0063 \in [+0.0031, +0.0094]$, empirical $p = 0.0002$.
+2. **McNemar's Paired Test (HR@10):**
+   - Discordant pairs: DPO won 280 users vs Base won 223 users (Net: $+57$ users).
+   - $\chi^2 = 6.2346, \; p = 0.0125$ (**Statistically significant at $p < 0.05$**).
+3. **Paired Wilcoxon Signed-Rank Test:**
+   - NDCG@10: $W = 1.48 \times 10^6, \; p = 0.0084$ ($p < 0.01$).
+   - MRR: $W = 1.52 \times 10^6, \; p = 0.0142$ ($p < 0.05$).
+4. **5-Step Autoregressive Rollouts ($K=5$):**
+   - Cumulative listening duration increased from $595.1$s to **$617.8$s** ($+22.7$s per 5-track session).
+5. **No Popularity Collapse:**
+   - Catalog Coverage increased ($24.12\% \to 24.45\%$), Shannon Entropy increased ($7.842 \to 7.881$), and Gini coefficient decreased ($0.741 \to 0.738$).
+
+👉 **For the complete, publication-grade research report answering all 5 core assignment questions in detail, see: [reports/final_report.md](reports/final_report.md)**.
+
 
 

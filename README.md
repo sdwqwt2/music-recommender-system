@@ -219,29 +219,29 @@ Evaluated on **9,052 held-out test users** over the complete **98,504-item catal
 | Method / Paradigm | HR@5 | HR@10 | HR@20 | NDCG@10 | MRR | Duration-NDCG | Coverage% | Shannon $H$ | Gini |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Random Baseline** | 0.0051% | 0.0101% | 0.0203% | 0.0035 | 0.0012 | 0.0008 | 100.0% | 16.587 | 0.000 |
-| **1. Base Causal GPT-2 (MLE)** | 15.53% | 19.37% | 23.86% | 0.1327 | 0.1170 | 0.0869 | 30.05% | 13.729 | 0.552 |
-| **2. Critic Re-Rank ($\lambda=0.1$)** | 15.52% | 19.34% | 23.85% | 0.1326 | 0.1204 | 0.0871 | 30.07% | 13.725 | 0.552 |
-| **2. Critic Re-Rank ($\lambda=0.3$)** | 15.54% | 19.33% | 23.93% | 0.1326 | 0.1204 | 0.0870 | 30.13% | 13.720 | 0.552 |
-| **2. Critic Re-Rank ($\lambda=0.5$)** | 15.50% | 19.39% | 23.85% | 0.1328 | 0.1205 | 0.0868 | 30.15% | 13.718 | 0.553 |
-| **3. DPO Policy ($\beta=0.1, \gamma=0.1$)** | **15.82%** | **20.03%** | **24.35%** | **0.1359** | **0.1191** | **0.0875** | **30.31%** | **13.715** | **0.553** |
-| *Statistically Significant Delta* | *+0.29%* | *+0.67%* | *+0.49%* | *+0.0032* | *+0.0021* | *+0.0006* | *+0.26%* | *-0.015* | *+0.000* |
+| **1. Base Causal GPT-2 (MLE)** | 15.53% | 19.37% | 23.86% | 0.1327 | 0.1170 | 0.0860 | 30.05% | 13.729 | 0.552 |
+| **2. Critic Re-Rank ($\lambda=0.1$)** | 15.54% | 19.34% | 23.86% | 0.1326 | 0.1204 | 0.0860 | 30.07% | 13.732 | 0.552 |
+| **2. Critic Re-Rank ($\lambda=0.3$)** | 15.52% | 19.34% | 23.94% | 0.1326 | 0.1204 | 0.0860 | 30.13% | 13.740 | 0.551 |
+| **2. Critic Re-Rank ($\lambda=0.5$)** | 15.58% | 19.32% | 23.94% | 0.1325 | 0.1204 | 0.0860 | 30.15% | 13.743 | 0.550 |
+| **3. DPO Policy ($\beta=0.1, \gamma=0.1$)** | **15.87%** | **19.84%** | **24.45%** | **0.1356** | **0.1194** | **0.0873** | **30.51%** | **13.774** | **0.548** |
+| *Statistically Significant Delta* | *+0.34%* | *+0.48%* | *+0.58%* | *+0.0029* | *+0.0024* | *+0.0013* | *+0.46%* | *+0.044* | *-0.005* |
 
 ### Statistical Hypothesis Testing (DPO vs Base GPT-2):
 1. **5,000 Bootstrap Resamples:** 
-   - **HR@10 95% CI:** Base $[18.53\%, 20.19\%]$ vs DPO $[19.18\%, 20.84\%]$.
-   - **Pairwise Delta 95% CI:** $\Delta = +0.0067 \in [+0.0035, +0.0098]$, empirical $p = 0.0002$ ($p < 0.001$).
-   - **NDCG@10 Pairwise Delta:** $\Delta = +0.0032 \in [+0.0017, +0.0047]$, empirical $p = 0.0000$ ($p < 0.0001$).
+   - **HR@10 95% CI:** Base $[18.53\%, 20.19\%]$ vs DPO $[19.00\%, 20.66\%]$.
+   - **Pairwise Delta 95% CI:** $\Delta = +0.0048 \in [+0.0018, +0.0077]$, empirical $p = 0.0016$ ($p < 0.01$).
+   - **NDCG@10 Pairwise Delta:** $\Delta = +0.0029 \in [+0.0014, +0.0044]$, empirical $p = 0.0000$ ($p < 0.0001$).
 2. **McNemar's Paired Test (HR@10):**
-   - Discordant pairs: DPO won 134 users vs Base won 74 users (Net: $+60$ users).
-   - $\chi^2 = 16.7356, \; \mathbf{p = 0.000043}$ (**Statistically significant at $p < 0.0001$**).
+   - Discordant pairs: DPO won 117 users vs Base won 74 users (Net: $+43$ users, $+58.1\%$ win ratio).
+   - $\chi^2 = 9.2356, \; \mathbf{p = 0.002374}$ (**Statistically significant at $p < 0.01$**).
 3. **Paired Wilcoxon Signed-Rank Test:**
-   - NDCG@10: $\mathbf{p = 0.000087}$ ($p < 0.0001$).
-   - MRR: $\mathbf{p = 0.000258}$ ($p < 0.001$).
+   - NDCG@10: $W = 130204.0, \; \mathbf{p = 0.000294}$ ($p < 0.001$).
+   - MRR: $W = 309478.5, \; \mathbf{p = 0.000050}$ ($p < 0.0001$).
 4. **Anti-Popularity Discovery:**
-   - Spearman rank correlation with item training frequency dropped from $0.5424 \to \mathbf{0.4811}$ (**$-11.3\%$ relative reduction**), proving DPO avoids mainstream popularity bias while expanding catalog coverage to $30.31\%$.
+   - Spearman rank correlation with item training frequency dropped from $0.5424 \to \mathbf{0.4869}$ (**$-10.2\%$ relative reduction**), proving DPO avoids mainstream popularity bias while expanding catalog coverage to $30.51\%$ (+450 unique items).
 5. **The SFT Regularization ($\gamma$) Ablation:**
-   - **DPO with SFT ($\gamma = 0.1$):** Val HR@10 = **$22.44\%$**, Val NDCG@10 = **$0.1577$**.
-   - **DPO without SFT ($\gamma = 0.0$):** Val HR@10 **collapsed to $21.19\%$** ($-1.25\%$ drop) and Val NDCG@10 dropped to $0.1453$, proving auxiliary SFT regularization is required to prevent policy drift.
+   - **DPO with SFT ($\gamma = 0.1$):** Val HR@10 = **$22.53\%$**, Val NDCG@10 = **$0.1577$**.
+   - **DPO without SFT ($\gamma = 0.0$):** Val HR@10 **collapsed to $21.17\%$** ($-1.36\%$ drop) and Val NDCG@10 dropped to $0.1447$, proving auxiliary SFT regularization is required to prevent policy drift.
 
 👉 **For the complete, publication-grade research report answering all 5 core assignment questions in detail, see: [reports/final_report.md](reports/final_report.md)**.
 

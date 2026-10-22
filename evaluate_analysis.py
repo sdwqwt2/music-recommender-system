@@ -574,7 +574,7 @@ def main() -> None:
     parser.add_argument("--reward_checkpoint", type=str, default=default_rm, help="Path to best_reward_model.pt")
     parser.add_argument("--output_json", type=str, default=default_out, help="Output path for structured JSON results")
     parser.add_argument("--batch_size", type=int, default=32, help="Evaluation batch size")
-    parser.add_argument("--num_bootstrap", type=int, default=5000, help="Number of bootstrap resamples for 95% CIs")
+    parser.add_argument("--num_bootstrap", type=int, default=5000, help="Number of bootstrap resamples for 95%% CIs")
     parser.add_argument("--num_rollout_users", type=int, default=300, help="Number of test users for 5-step rollouts")
     parser.add_argument("--rollout_steps", type=int, default=5, help="Number of autoregressive steps")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")

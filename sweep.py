@@ -222,7 +222,7 @@ def main() -> None:
     parser.add_argument("--processed_dir", type=str, default=default_processed, help="Directory for sweep processed data")
     parser.add_argument("--output_dir", type=str, default=default_output, help="Directory to save sweep results")
     parser.add_argument("--num_trials", type=int, default=12, help="Number of random hyperparameter trials (default: 12)")
-    parser.add_argument("--subsample_users", type=float, default=0.20, help="Fraction of users to sample (default: 0.20 = 20%)")
+    parser.add_argument("--subsample_users", type=float, default=0.20, help="Fraction of users to sample (default: 0.20 = 20%%)")
     parser.add_argument("--epochs_per_trial", type=int, default=3, help="Training epochs per trial (default: 3)")
     parser.add_argument("--max_length", type=int, default=64, help="Sequence maximum length")
     parser.add_argument("--max_items", type=int, default=100000, help="Vocabulary cap (default: 100000)")

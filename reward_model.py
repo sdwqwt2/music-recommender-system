@@ -521,7 +521,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate for Critic Head")
     parser.add_argument("--epochs", type=int, default=3, help="Training epochs")
     parser.add_argument("--skip_threshold_sec", type=float, default=30.0, help="Skip cutoff threshold in seconds")
-    parser.add_argument("--max_duration_sec", type=float, default=180.0, help="Benchmark duration for 100% completion")
+    parser.add_argument("--max_duration_sec", type=float, default=180.0, help="Benchmark duration for 100%% completion")
     parser.add_argument("--unfreeze_backbone", action="store_true", help="Fine-tune GPT-2 backbone end-to-end")
     parser.add_argument("--fp16", action="store_true", help="Enable mixed precision")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
@@ -533,23 +533,48 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     use_amp = args.fp16 and (device.type == "cuda")
 
-    # 1. Load Preprocessed Data
-    processed_dir = Path(args.processed_dir)
+    # 1. Resilient Processed Data Resolution
+    processed_candidates = [
+        Path(args.processed_dir),
+        Path("/kaggle/working/Music-Recommender-System/downloaded_weights/data/processed"),
+        Path("/kaggle/working/downloaded_weights/data/processed"),
+        Path("/kaggle/working/data/processed"),
+        Path("data/processed"),
+    ]
+    processed_dir = None
+    for p in processed_candidates:
+        if (p / "train_interactions.parquet").exists():
+            processed_dir = p
+            break
+    if processed_dir is None:
+        raise FileNotFoundError(f"Could not locate processed directory in: {processed_candidates}")
+
     train_df = pd.read_parquet(processed_dir / "train_interactions.parquet")
     val_df = pd.read_parquet(processed_dir / "val_interactions.parquet")
     tokenizer = ItemTokenizer.load(processed_dir / "item_tokenizer.json")
 
-    print(f"[Data] Loaded: Train interactions={len(train_df):,}, Val interactions={len(val_df):,}")
+    print(f"[Data] Loaded from '{processed_dir}': Train={len(train_df):,}, Val={len(val_df):,}")
 
-    # 2. Restore Phase 1 Base Model
-    ckpt_path = Path(args.base_checkpoint)
-    if not ckpt_path.exists():
-        raise FileNotFoundError(f"Base checkpoint not found at: {ckpt_path}")
+    # 2. Resilient Base Checkpoint Resolution
+    base_candidates = [
+        Path(args.base_checkpoint),
+        Path("/kaggle/working/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("checkpoints/best_gpt2_recsys.pt"),
+    ]
+    ckpt_path = None
+    for c in base_candidates:
+        if c.exists():
+            ckpt_path = c
+            break
+    if ckpt_path is None:
+        raise FileNotFoundError(f"Base checkpoint not found in any expected location: {base_candidates}")
 
     checkpoint = torch.load(ckpt_path, map_location=device)
     cfg = checkpoint["model_config"]
     base_model = build_gpt2_recsys_model(**cfg).to(device)
-    base_model.load_state_dict(checkpoint["model_state_dict"])
+    weights = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
+    base_model.load_state_dict(weights)
     print(f"[Model] Restored Base GPT-2 from {ckpt_path} (Val HR@10: {checkpoint.get('val_hr10')})")
 
     # 3. Construct State-Action Reward Model (Critic)

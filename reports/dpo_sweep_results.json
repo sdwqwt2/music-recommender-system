@@ -1,0 +1,90 @@
+[
+  {
+    "trial_id": 1,
+    "beta": 0.1,
+    "sft_weight": 0.0,
+    "strategy": "binary_skip",
+    "val_win_rate": 61.84,
+    "val_margin": 0.0036,
+    "val_hr@10": 0.2482758620689655,
+    "val_ndcg@10": 0.153656618008275,
+    "elapsed_sec": 1.1
+  },
+  {
+    "trial_id": 2,
+    "beta": 0.1,
+    "sft_weight": 0.05,
+    "strategy": "binary_skip",
+    "val_win_rate": 58.55,
+    "val_margin": 0.0024,
+    "val_hr@10": 0.21379310344827587,
+    "val_ndcg@10": 0.1432757363024019,
+    "elapsed_sec": 0.5
+  },
+  {
+    "trial_id": 3,
+    "beta": 0.1,
+    "sft_weight": 0.1,
+    "strategy": "binary_skip",
+    "val_win_rate": 51.64,
+    "val_margin": 0.0011,
+    "val_hr@10": 0.23448275862068965,
+    "val_ndcg@10": 0.14918360112198828,
+    "elapsed_sec": 0.5
+  },
+  {
+    "trial_id": 4,
+    "beta": 0.1,
+    "sft_weight": 0.2,
+    "strategy": "binary_skip",
+    "val_win_rate": 53.95,
+    "val_margin": 0.0009,
+    "val_hr@10": 0.23448275862068965,
+    "val_ndcg@10": 0.1495003337051488,
+    "elapsed_sec": 0.6
+  },
+  {
+    "trial_id": 5,
+    "beta": 0.05,
+    "sft_weight": 0.1,
+    "strategy": "binary_skip",
+    "val_win_rate": 56.25,
+    "val_margin": 0.0004,
+    "val_hr@10": 0.22758620689655173,
+    "val_ndcg@10": 0.14628780615574677,
+    "elapsed_sec": 0.5
+  },
+  {
+    "trial_id": 6,
+    "beta": 0.2,
+    "sft_weight": 0.1,
+    "strategy": "binary_skip",
+    "val_win_rate": 52.96,
+    "val_margin": 0.0023,
+    "val_hr@10": 0.2620689655172414,
+    "val_ndcg@10": 0.1560018425817737,
+    "elapsed_sec": 0.6
+  },
+  {
+    "trial_id": 7,
+    "beta": 0.1,
+    "sft_weight": 0.1,
+    "strategy": "played_ratio",
+    "val_win_rate": 53.95,
+    "val_margin": 0.0012,
+    "val_hr@10": 0.23448275862068965,
+    "val_ndcg@10": 0.1477008271472856,
+    "elapsed_sec": 0.5
+  },
+  {
+    "trial_id": 8,
+    "beta": 0.1,
+    "sft_weight": 0.1,
+    "strategy": "margin_threshold",
+    "val_win_rate": 60.53,
+    "val_margin": 0.0021,
+    "val_hr@10": 0.23448275862068965,
+    "val_ndcg@10": 0.1479707586668695,
+    "elapsed_sec": 0.6
+  }
+]

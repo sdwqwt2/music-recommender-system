@@ -30,7 +30,7 @@ import torch
 from torch.optim import AdamW
 
 from data_utils import ItemTokenizer, set_seed
-from dataset import SequentialRecDataset
+from dataset import create_dataloader
 from dpo_dataset import create_dpo_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
 from train_base import evaluate, get_device, get_lr_scheduler
@@ -74,7 +74,8 @@ def run_dpo_trial(
         n_layer=cfg["n_layer"],
         n_head=cfg["n_head"],
     ).to(device)
-    policy_model.load_state_dict(checkpoint["model_state_dict"])
+    weights = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
+    policy_model.load_state_dict(weights)
 
     ref_model = build_gpt2_recsys_model(
         num_items=cfg["num_items"],
@@ -83,7 +84,7 @@ def run_dpo_trial(
         n_layer=cfg["n_layer"],
         n_head=cfg["n_head"],
     ).to(device)
-    ref_model.load_state_dict(checkpoint["model_state_dict"])
+    ref_model.load_state_dict(weights)
     ref_model.eval()
     for p in ref_model.parameters():
         p.requires_grad = False
@@ -107,9 +108,14 @@ def run_dpo_trial(
         max_pairs_per_user=2,
     )
 
-    val_seq_dataset = SequentialRecDataset(df=val_df, history_df=train_df, max_length=cfg["max_length"], is_eval=True)
-    val_seq_loader = torch.utils.data.DataLoader(
-        val_seq_dataset, batch_size=batch_size, shuffle=False, collate_fn=val_seq_dataset.collate_fn
+    val_seq_loader = create_dataloader(
+        df=val_df,
+        history_df=train_df,
+        max_length=cfg["max_length"],
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=(device.type == "cuda"),
     )
 
     optimizer = AdamW(policy_model.parameters(), lr=lr, weight_decay=0.01)
@@ -186,9 +192,42 @@ def main() -> None:
     device = get_device()
     use_amp = args.fp16 and (device.type == "cuda")
 
-    processed_dir = Path(args.processed_dir)
+    # 1. Resilient Processed Data Resolution
+    processed_candidates = [
+        Path(args.processed_dir),
+        Path("/kaggle/working/Music-Recommender-System/downloaded_weights/data/processed"),
+        Path("/kaggle/working/downloaded_weights/data/processed"),
+        Path("/kaggle/working/data/processed"),
+        Path("data/processed"),
+    ]
+    processed_dir = None
+    for p in processed_candidates:
+        if (p / "train_interactions.parquet").exists():
+            processed_dir = p
+            break
+    if processed_dir is None:
+        raise FileNotFoundError(f"Could not locate processed directory in: {processed_candidates}")
+
     train_df = pd.read_parquet(processed_dir / "train_interactions.parquet")
     val_df = pd.read_parquet(processed_dir / "val_interactions.parquet")
+    print(f"[Data] Loaded from '{processed_dir}': Train={len(train_df):,}, Val={len(val_df):,}")
+
+    # 2. Resilient Base Checkpoint Resolution
+    base_candidates = [
+        Path(args.base_checkpoint),
+        Path("/kaggle/working/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("checkpoints/best_gpt2_recsys.pt"),
+    ]
+    base_ckpt_path = None
+    for c in base_candidates:
+        if c.exists():
+            base_ckpt_path = c
+            break
+    if base_ckpt_path is None:
+        raise FileNotFoundError(f"Could not locate Base checkpoint in: {base_candidates}")
+
+    print(f"[Model] Using Base Checkpoint: {base_ckpt_path}")
 
     # Hyperparameter Grid
     betas = [0.05, 0.1, 0.2]
@@ -223,7 +262,7 @@ def main() -> None:
             strategy=cfg["strategy"],
             train_df=train_df,
             val_df=val_df,
-            base_checkpoint_path=Path(args.base_checkpoint),
+            base_checkpoint_path=base_ckpt_path,
             device=device,
             epochs=args.epochs_per_trial,
             batch_size=args.batch_size,

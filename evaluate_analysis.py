@@ -42,7 +42,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import ItemTokenizer
+from data_utils import ItemTokenizer, set_seed
 from dataset import SequentialRecDataset, create_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
 from reward_model import RecSysRewardModel
@@ -577,8 +577,10 @@ def main() -> None:
     parser.add_argument("--num_bootstrap", type=int, default=5000, help="Number of bootstrap resamples for 95% CIs")
     parser.add_argument("--num_rollout_users", type=int, default=300, help="Number of test users for 5-step rollouts")
     parser.add_argument("--rollout_steps", type=int, default=5, help="Number of autoregressive steps")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
     args = parser.parse_args()
 
+    set_seed(args.seed)
     device = get_device()
 
     # 1. Resolve Data Path
@@ -739,17 +741,20 @@ def main() -> None:
             base_arr=base_results["per_user_hits"][k],
             dpo_arr=dpo_results["per_user_hits"][k],
             num_bootstrap=args.num_bootstrap,
+            seed=args.seed,
         )
         stat_tests[f"ndcg@{k}"] = compute_bootstrap_ci(
             base_arr=base_results["per_user_ndcg"][k],
             dpo_arr=dpo_results["per_user_ndcg"][k],
             num_bootstrap=args.num_bootstrap,
+            seed=args.seed,
         )
 
     stat_tests["mrr"] = compute_bootstrap_ci(
         base_arr=base_results["per_user_mrr"],
         dpo_arr=dpo_results["per_user_mrr"],
         num_bootstrap=args.num_bootstrap,
+        seed=args.seed,
     )
 
     # McNemar's paired test on HitRate@10

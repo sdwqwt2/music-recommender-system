@@ -26,7 +26,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import ItemTokenizer
+from data_utils import ItemTokenizer, set_seed
 from dataset import SequentialRecDataset, create_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
 from train_base import get_device
@@ -251,8 +251,10 @@ def main() -> None:
     parser.add_argument("--batch_size", type=int, default=32, help="Evaluation batch size")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of qualitative users to inspect")
     parser.add_argument("--fp16", action="store_true", help="Enable FP16 evaluation")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
     args = parser.parse_args()
 
+    set_seed(args.seed)
     device = get_device()
 
     # Resilient Processed Directory Resolution

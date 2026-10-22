@@ -39,7 +39,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import ItemTokenizer
+from data_utils import ItemTokenizer, set_seed
 from dataset import create_dataloader
 from dpo_dataset import DPORecBatch, create_dpo_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
@@ -282,8 +282,10 @@ def main() -> None:
     parser.add_argument("--max_pairs_per_user", type=int, default=2, help="Max preference pairs mined per user (default: 2 for high signal & fast training)")
     parser.add_argument("--fp16", action="store_true", help="Enable mixed precision training")
     parser.add_argument("--num_workers", type=int, default=2 if is_kaggle else 0, help="DataLoader workers")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
     args = parser.parse_args()
 
+    set_seed(args.seed)
     device = get_device()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)

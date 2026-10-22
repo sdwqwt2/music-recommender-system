@@ -31,7 +31,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import ItemTokenizer, preprocess_pipeline
+from data_utils import ItemTokenizer, preprocess_pipeline, set_seed
 from dataset import SequentialRecDataset, create_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
 
@@ -355,8 +355,10 @@ def main() -> None:
     parser.add_argument("--num_workers", type=int, default=2 if is_kaggle else 0, help="DataLoader subprocess workers")
     parser.add_argument("--use_wandb", action="store_true", help="Enable Weights & Biases logging")
     parser.add_argument("--wandb_project", type=str, default="yambda-gpt2-recsys", help="WandB project name")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
     args = parser.parse_args()
 
+    set_seed(args.seed)
     device = get_device()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)

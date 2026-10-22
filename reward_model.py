@@ -38,7 +38,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import ItemTokenizer
+from data_utils import ItemTokenizer, set_seed
 from dataset import RecBatch, create_dataloader
 from model import RecSysGPT2, build_gpt2_recsys_model
 from train_base import get_device, get_lr_scheduler
@@ -455,8 +455,10 @@ def main() -> None:
     parser.add_argument("--max_duration_sec", type=float, default=180.0, help="Benchmark duration for 100% completion")
     parser.add_argument("--unfreeze_backbone", action="store_true", help="Fine-tune GPT-2 backbone end-to-end")
     parser.add_argument("--fp16", action="store_true", help="Enable mixed precision")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for deterministic reproducibility (default: 42)")
     args = parser.parse_args()
 
+    set_seed(args.seed)
     device = get_device()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)

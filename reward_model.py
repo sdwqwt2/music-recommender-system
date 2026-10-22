@@ -268,6 +268,75 @@ class RecSysRewardModel(nn.Module):
         return reward_scores
 
     @torch.no_grad()
+    def compute_composite_reward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        action_ids: torch.Tensor,
+        reward_type: str = "composite",
+        lambda_skip: float = 0.5,
+        lambda_repeat: float = 0.3,
+        repetition_window: int = 4,
+    ) -> torch.Tensor:
+        """
+        Computes scalar reinforcement learning reward for user history state s and action a.
+
+        Args:
+            input_ids: LongTensor [B, L] user interaction history.
+            attention_mask: LongTensor [B, L] attention mask.
+            action_ids: LongTensor [B] recommended action / candidate track token.
+            reward_type: Formulation type ('binary', 'duration', 'composite').
+            lambda_skip: Penalty weight for predicted skips.
+            lambda_repeat: Penalty weight for repeating recently consumed tracks.
+            repetition_window: Number of recent items to inspect for repeat play fatigue.
+
+        Returns:
+            rewards: FloatTensor [B] scalar reward per sequence.
+        """
+        if action_ids.dim() == 1:
+            cand_2d = action_ids.unsqueeze(1)  # [B, 1]
+        else:
+            cand_2d = action_ids
+
+        backbone_outputs = self.backbone.transformer.transformer(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            return_dict=True,
+        )
+        hidden_states = backbone_outputs.last_hidden_state
+        seq_lens = torch.clamp(attention_mask.sum(dim=-1) - 1, min=0)
+        batch_idx = torch.arange(input_ids.size(0), device=input_ids.device)
+        last_hidden = hidden_states[batch_idx, seq_lens]  # [B, n_embd]
+
+        cand_embeds = self._get_item_embeddings(cand_2d)   # [B, 1, n_embd]
+        user_expanded = last_hidden.unsqueeze(1)            # [B, 1, n_embd]
+
+        fused = torch.cat([user_expanded, cand_embeds, user_expanded * cand_embeds], dim=-1)
+        h = self.interaction_mlp(fused)
+
+        skip_prob = torch.sigmoid(self.skip_head(h).squeeze(-1)).squeeze(1)       # [B]
+        completion_ratio = self.duration_head(h).squeeze(-1).squeeze(1)           # [B]
+
+        if reward_type == "binary":
+            # Binary reward: +1 for predicted engaged (skip_prob < 0.5), -1 for skip
+            return torch.where(skip_prob < 0.5, torch.ones_like(skip_prob), -torch.ones_like(skip_prob))
+
+        elif reward_type == "duration":
+            # Raw completion ratio in [0, 1]
+            return completion_ratio
+
+        else:
+            # Multi-objective composite reward:
+            # 1. Base engagement reward: (1 - P(skip)) * CompletionRatio
+            # 2. Skip penalty: - lambda_skip * P(skip)
+            # 3. Repeat-play penalty: - lambda_repeat if item occurred in recent window
+            recent_context = input_ids[:, -repetition_window:]  # [B, W]
+            is_repeat = (recent_context == action_ids.unsqueeze(1)).any(dim=-1).float()  # [B]
+
+            composite = (1.0 - skip_prob) * completion_ratio - (lambda_skip * skip_prob) - (lambda_repeat * is_repeat)
+            return composite
+
+    @torch.no_grad()
     def predict_catalog_rewards(
         self,
         input_ids: torch.Tensor,

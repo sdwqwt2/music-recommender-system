@@ -279,6 +279,7 @@ def main() -> None:
     parser.add_argument("--sft_weight", type=float, default=0.1, help="Auxiliary SFT loss weight on winning items")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=2, help="Gradient accumulation steps")
     parser.add_argument("--skip_threshold_sec", type=float, default=30.0, help="Listening threshold separating skip from engaged")
+    parser.add_argument("--preference_strategy", type=str, default="binary_skip", choices=["binary_skip", "played_ratio", "margin_threshold"], help="Pair mining strategy: binary_skip, played_ratio, or margin_threshold")
     parser.add_argument("--max_pairs_per_user", type=int, default=2, help="Max preference pairs mined per user (default: 2 for high signal & fast training)")
     parser.add_argument("--fp16", action="store_true", help="Enable mixed precision training")
     parser.add_argument("--num_workers", type=int, default=2 if is_kaggle else 0, help="DataLoader workers")
@@ -363,6 +364,7 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=True,
         skip_threshold_sec=args.skip_threshold_sec,
+        preference_strategy=args.preference_strategy,
         max_pairs_per_user=args.max_pairs_per_user,
         user_col="uid",
         num_workers=args.num_workers,
@@ -375,6 +377,7 @@ def main() -> None:
         batch_size=args.batch_size,
         shuffle=False,
         skip_threshold_sec=args.skip_threshold_sec,
+        preference_strategy=args.preference_strategy,
         max_pairs_per_user=args.max_pairs_per_user,
         user_col="uid",
         num_workers=args.num_workers,

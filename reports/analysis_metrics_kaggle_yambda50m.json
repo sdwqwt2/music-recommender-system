@@ -1,0 +1,181 @@
+{
+  "dataset_metadata": {
+    "name": "Yambda-50M (Yandex Music)",
+    "catalog_size": 98504,
+    "test_users": 9052,
+    "split_mode": "global_temporal",
+    "seed": 42
+  },
+  "benchmark": {
+    "random_baseline": {
+      "hr@5": 0.000051,
+      "hr@10": 0.000101,
+      "hr@20": 0.000203,
+      "ndcg@10": 0.0035,
+      "mrr": 0.0012,
+      "duration_ndcg@10": 0.0008,
+      "catalog_coverage_pct": 100.0,
+      "shannon_entropy": 16.587,
+      "gini": 0.0
+    },
+    "base_causal_gpt2": {
+      "hr@5": 0.1553,
+      "hr@10": 0.1937,
+      "hr@20": 0.2386,
+      "ndcg@10": 0.1327,
+      "mrr": 0.1170,
+      "duration_ndcg@10": 0.0860,
+      "catalog_coverage_pct": 30.05,
+      "unique_items_recommended": 29604,
+      "shannon_entropy": 13.729,
+      "gini": 0.552,
+      "popularity_spearman": 0.5424
+    },
+    "critic_rerank_lambda_0_1": {
+      "hr@5": 0.1554,
+      "hr@10": 0.1934,
+      "hr@20": 0.2386,
+      "ndcg@10": 0.1326,
+      "mrr": 0.1204,
+      "duration_ndcg@10": 0.0860,
+      "catalog_coverage_pct": 30.07,
+      "shannon_entropy": 13.732,
+      "gini": 0.552
+    },
+    "critic_rerank_lambda_0_3": {
+      "hr@5": 0.1552,
+      "hr@10": 0.1934,
+      "hr@20": 0.2394,
+      "ndcg@10": 0.1326,
+      "mrr": 0.1204,
+      "duration_ndcg@10": 0.0860,
+      "catalog_coverage_pct": 30.13,
+      "shannon_entropy": 13.740,
+      "gini": 0.551
+    },
+    "critic_rerank_lambda_0_5": {
+      "hr@5": 0.1558,
+      "hr@10": 0.1932,
+      "hr@20": 0.2394,
+      "ndcg@10": 0.1325,
+      "mrr": 0.1204,
+      "duration_ndcg@10": 0.0860,
+      "catalog_coverage_pct": 30.15,
+      "shannon_entropy": 13.743,
+      "gini": 0.550
+    },
+    "dpo_policy": {
+      "hr@5": 0.1587,
+      "hr@10": 0.1984,
+      "hr@20": 0.2445,
+      "ndcg@10": 0.1356,
+      "mrr": 0.1194,
+      "duration_ndcg@10": 0.0873,
+      "catalog_coverage_pct": 30.51,
+      "unique_items_recommended": 30054,
+      "shannon_entropy": 13.774,
+      "gini": 0.548,
+      "popularity_spearman": 0.4869
+    }
+  },
+  "statistical_tests": {
+    "bootstrap_5000": {
+      "hr@5": {
+        "base_ci": [0.1477, 0.1627],
+        "dpo_ci": [0.1513, 0.1662],
+        "delta": 0.0034,
+        "delta_ci": [0.0006, 0.0063],
+        "p_value": 0.0118,
+        "significant": true
+      },
+      "hr@10": {
+        "base_ci": [0.1853, 0.2019],
+        "dpo_ci": [0.1900, 0.2066],
+        "delta": 0.0048,
+        "delta_ci": [0.0018, 0.0077],
+        "p_value": 0.0016,
+        "significant": true
+      },
+      "hr@20": {
+        "base_ci": [0.2297, 0.2476],
+        "dpo_ci": [0.2353, 0.2532],
+        "delta": 0.0058,
+        "delta_ci": [0.0023, 0.0092],
+        "p_value": 0.0004,
+        "significant": true
+      },
+      "ndcg@10": {
+        "base_ci": [0.1267, 0.1390],
+        "dpo_ci": [0.1294, 0.1419],
+        "delta": 0.0029,
+        "delta_ci": [0.0014, 0.0044],
+        "p_value": 0.0000,
+        "significant": true
+      },
+      "mrr": {
+        "base_ci": [0.1113, 0.1229],
+        "dpo_ci": [0.1136, 0.1253],
+        "delta": 0.0024,
+        "delta_ci": [0.0009, 0.0039],
+        "p_value": 0.0008,
+        "significant": true
+      }
+    },
+    "mcnemar_hr10": {
+      "total_users": 9052,
+      "n00_both_miss": 7182,
+      "n11_both_hit": 1679,
+      "n01_dpo_won": 117,
+      "n10_base_won": 74,
+      "net_discordant_gain": 43,
+      "chi2_continuity_corrected": 9.2356,
+      "p_value": 0.002374,
+      "significant_p01": true
+    },
+    "wilcoxon_signed_rank": {
+      "ndcg@10": {
+        "stat": 130204.0,
+        "p_value": 0.000294,
+        "significant": true
+      },
+      "mrr": {
+        "stat": 309478.5,
+        "p_value": 0.000050,
+        "significant": true
+      }
+    }
+  },
+  "sft_ablation": {
+    "dpo_with_sft_gamma_0_1": {
+      "val_preference_win_rate": 0.7206,
+      "val_reward_margin": 0.078,
+      "val_hr@10": 0.2253,
+      "val_ndcg@10": 0.1577
+    },
+    "dpo_without_sft_gamma_0_0": {
+      "val_preference_win_rate": 0.7089,
+      "val_reward_margin": 0.188,
+      "val_hr@10": 0.2117,
+      "val_ndcg@10": 0.1447
+    },
+    "delta_removal": {
+      "win_rate_delta": -0.0117,
+      "reward_margin_delta": 0.110,
+      "val_hr@10_delta": -0.0136,
+      "val_ndcg@10_delta": -0.0130
+    }
+  },
+  "rollouts_5_steps": {
+    "steps": [1, 2, 3, 4, 5],
+    "base": {
+      "skip_prob": [0.2548, 0.2522, 0.2495, 0.2493, 0.2483],
+      "expected_duration_sec": [164.6, 164.4, 164.3, 164.2, 165.2],
+      "total_session_sec": 822.7
+    },
+    "dpo": {
+      "skip_prob": [0.2554, 0.2542, 0.2526, 0.2517, 0.2491],
+      "expected_duration_sec": [164.4, 164.6, 164.3, 164.7, 165.1],
+      "total_session_sec": 823.0
+    }
+  }
+}

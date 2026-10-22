@@ -19,12 +19,20 @@ $$\hat{y}_{t+1} = \arg\max_{i \in \mathcal{V}} P(s_{t+1} = i \mid s_1, s_2, \dot
 
 ```
 Music-Recommender-System/
-├── data_utils.py       # Frequency filtering, strict temporal splits, ItemTokenizer
-├── dataset.py          # PyTorch Dataset, causal sequence shifting, padding, batching
-├── model.py            # GPT2LMHeadModel initialized from scratch (custom GPT2Config)
-├── train_base.py       # Training loop, ranking metrics (HR@10, NDCG@10), WandB, checkpointing
-├── requirements.txt    # Project dependencies
-└── README.md           # Architecture, mathematical formulation, and documentation
+├── data_utils.py          # Frequency filtering, strict temporal splits, ItemTokenizer
+├── dataset.py             # PyTorch Dataset, causal sequence shifting, padding, batching
+├── model.py               # GPT2LMHeadModel initialized from scratch (custom GPT2Config)
+├── train_base.py          # Phase 1: Base Causal GPT-2 Next-Item training
+├── reward_model.py        # Phase 2: State-Action Critic Q(s, a) and Composite Reward
+├── dpo_dataset.py         # Multi-strategy pairwise mining (binary, ratio, margin)
+├── train_dpo.py           # Phase 2: Direct Preference Optimization (DPO) policy alignment
+├── train_ppo.py           # Phase 2: Actor-Critic PPO alignment with KL regularization
+├── sweep_dpo.py           # Hyperparameter grid sweep & Pareto frontier analysis
+├── evaluate_analysis.py   # Multi-paradigm benchmark, bootstrap, McNemar, Wilcoxon
+├── generate_figures.py    # Publication-grade figure generator (reports/figures/)
+├── requirements.txt       # Project dependencies
+├── reports/               # Final scientific report, figures, and benchmark metrics
+└── README.md              # Project overview, architecture, and quickstart
 ```
 
 ---

@@ -89,6 +89,7 @@ class DPORecDataset(Dataset):
         history_df: Optional[pd.DataFrame] = None,
         max_length: int = 64,
         skip_threshold_sec: float = 30.0,
+        preference_strategy: str = "binary_skip",
         max_pairs_per_user: int = 2,
         user_col: str = "uid",
         item_token_col: str = "item_token",
@@ -100,6 +101,7 @@ class DPORecDataset(Dataset):
         super().__init__()
         self.max_length = max_length
         self.skip_threshold_sec = skip_threshold_sec
+        self.preference_strategy = preference_strategy
         self.max_pairs_per_user = max_pairs_per_user
         self.pad_token_id = pad_token_id
         self.rng = np.random.RandomState(seed)
@@ -171,8 +173,22 @@ class DPORecDataset(Dataset):
                 skipped_users += 1
                 continue
 
+            # Define engagement & skip thresholds according to chosen strategy
+            if self.preference_strategy == "played_ratio":
+                # Relative completion proxy (normalized to typical 180s track)
+                is_skip_mask = (dur_seq / 180.0) < 0.25
+                engaged_threshold = 180.0 * 0.65  # ~117s
+            elif self.preference_strategy == "margin_threshold":
+                # Strict high-margin: >= 60s win vs < 20s loss (guaranteed Delta >= 40s)
+                is_skip_mask = dur_seq < 20.0
+                engaged_threshold = 60.0
+            else:
+                # Default binary skip cutoff (< 30s)
+                is_skip_mask = dur_seq < self.skip_threshold_sec
+                engaged_threshold = self.skip_threshold_sec
+
             # Identify all tracks this specific user skipped in their history
-            user_skip_indices = np.where(dur_seq < self.skip_threshold_sec)[0]
+            user_skip_indices = np.where(is_skip_mask)[0]
             user_skipped_items = item_seq[user_skip_indices]
 
             # Mine backwards from the most recent interactions (highest context fidelity up to max_length)
@@ -184,7 +200,7 @@ class DPORecDataset(Dataset):
                 current_item = item_seq[t]
                 current_dur = dur_seq[t]
                 prefix_items = item_seq[:t]
-                is_engaged = current_dur >= self.skip_threshold_sec
+                is_engaged = current_dur >= engaged_threshold
 
                 if is_engaged:
                     win_item = current_item
@@ -216,13 +232,13 @@ class DPORecDataset(Dataset):
                         user_pairs += 1
                         total_pairs += 1
 
-                else:
+                elif is_skip_mask[t]:
                     # Current item was skipped: item_t is a natural negative for prefix_items!
                     lose_item = current_item
                     lose_dur = current_dur
 
                     # Look ahead for the next engaged track the user accepted
-                    future_engaged = [k for k in range(t + 1, len(item_seq)) if dur_seq[k] >= self.skip_threshold_sec]
+                    future_engaged = [k for k in range(t + 1, len(item_seq)) if dur_seq[k] >= engaged_threshold]
                     if future_engaged:
                         next_engaged_idx = future_engaged[0]
                         win_item = item_seq[next_engaged_idx]
@@ -304,6 +320,7 @@ def create_dpo_dataloader(
     batch_size: int = 64,
     shuffle: bool = True,
     skip_threshold_sec: float = 30.0,
+    preference_strategy: str = "binary_skip",
     max_pairs_per_user: int = 2,
     user_col: str = "uid",
     num_workers: int = 0,
@@ -317,6 +334,7 @@ def create_dpo_dataloader(
         history_df=history_df,
         max_length=max_length,
         skip_threshold_sec=skip_threshold_sec,
+        preference_strategy=preference_strategy,
         max_pairs_per_user=max_pairs_per_user,
         user_col=user_col,
         pad_token_id=pad_token_id,

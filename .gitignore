@@ -15,7 +15,6 @@ data/
 checkpoints/
 wandb/
 sweep_results/
-reports/*.json
 *.parquet
 *.csv
 

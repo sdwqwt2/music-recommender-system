@@ -256,15 +256,45 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     use_amp = args.fp16 and (device.type == "cuda")
 
-    # 1. Load Data
-    processed_dir = Path(args.processed_dir)
+    # 1. Resilient Data Resolution
+    processed_candidates = [
+        Path(args.processed_dir),
+        Path("/kaggle/working/Music-Recommender-System/downloaded_weights/data/processed"),
+        Path("/kaggle/working/downloaded_weights/data/processed"),
+        Path("/kaggle/working/data/processed"),
+        Path("data/processed"),
+    ]
+    processed_dir = None
+    for p in processed_candidates:
+        if (p / "train_interactions.parquet").exists():
+            processed_dir = p
+            break
+    if processed_dir is None:
+        raise FileNotFoundError(f"Could not locate processed directory with train_interactions.parquet in: {processed_candidates}")
+
     train_df = pd.read_parquet(processed_dir / "train_interactions.parquet")
     val_df = pd.read_parquet(processed_dir / "val_interactions.parquet")
     tokenizer = ItemTokenizer.load(processed_dir / "item_tokenizer.json")
+    print(f"[Data] Loaded from '{processed_dir}': Train={len(train_df):,}, Val={len(val_df):,} | Vocab={tokenizer.num_items:,}")
 
-    # 2. Load Base Model and Reference Model
-    base_ckpt = torch.load(args.base_checkpoint, map_location=device)
+    # 2. Resilient Base Checkpoint Resolution
+    base_candidates = [
+        Path(args.base_checkpoint),
+        Path("/kaggle/working/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("/kaggle/working/checkpoints/best_gpt2_recsys.pt"),
+        Path("checkpoints/best_gpt2_recsys.pt"),
+    ]
+    base_ckpt_path = None
+    for c in base_candidates:
+        if c.exists():
+            base_ckpt_path = c
+            break
+    if base_ckpt_path is None:
+        raise FileNotFoundError(f"Could not locate Base checkpoint in: {base_candidates}")
+
+    base_ckpt = torch.load(base_ckpt_path, map_location=device)
     cfg = base_ckpt["model_config"]
+    actor_weights = base_ckpt["model_state_dict"] if "model_state_dict" in base_ckpt else base_ckpt
 
     actor_model = build_gpt2_recsys_model(
         num_items=cfg["num_items"],
@@ -273,7 +303,7 @@ def main() -> None:
         n_layer=cfg["n_layer"],
         n_head=cfg["n_head"],
     ).to(device)
-    actor_model.load_state_dict(base_ckpt["model_state_dict"])
+    actor_model.load_state_dict(actor_weights)
 
     ref_model = build_gpt2_recsys_model(
         num_items=cfg["num_items"],
@@ -282,30 +312,53 @@ def main() -> None:
         n_layer=cfg["n_layer"],
         n_head=cfg["n_head"],
     ).to(device)
-    ref_model.load_state_dict(base_ckpt["model_state_dict"])
+    ref_model.load_state_dict(actor_weights)
     ref_model.eval()
     for p in ref_model.parameters():
         p.requires_grad = False
+    print(f"[Model] Restored Base Policy & Frozen Reference Model from: {base_ckpt_path}")
 
-    # 3. Load Reward Model (Critic)
-    reward_ckpt = torch.load(args.reward_checkpoint, map_location=device)
+    # 3. Resilient Reward Model (Critic) Resolution
+    rm_candidates = [
+        Path(args.reward_checkpoint),
+        Path("/kaggle/working/checkpoints/best_reward_model.pt"),
+        Path("checkpoints/best_reward_model.pt"),
+    ]
+    rm_ckpt_path = None
+    for c in rm_candidates:
+        if c.exists():
+            rm_ckpt_path = c
+            break
+    if rm_ckpt_path is None:
+        raise FileNotFoundError(f"Could not locate Reward Model checkpoint in: {rm_candidates}")
+
+    reward_ckpt = torch.load(rm_ckpt_path, map_location=device)
+    rm_cfg = reward_ckpt.get("model_config", cfg)
+
     reward_backbone = build_gpt2_recsys_model(
-        num_items=cfg["num_items"],
-        max_length=cfg["max_length"],
-        n_embd=cfg["n_embd"],
-        n_layer=cfg["n_layer"],
-        n_head=cfg["n_head"],
+        num_items=rm_cfg.get("num_items", cfg["num_items"]),
+        max_length=rm_cfg.get("max_length", cfg["max_length"]),
+        n_embd=rm_cfg.get("n_embd", cfg["n_embd"]),
+        n_layer=rm_cfg.get("n_layer", cfg["n_layer"]),
+        n_head=rm_cfg.get("n_head", cfg["n_head"]),
     ).to(device)
-    reward_backbone.load_state_dict(reward_ckpt["backbone_state_dict"])
+
+    # Initialize backbone from base weights or reward checkpoint
+    if "backbone_state_dict" in reward_ckpt:
+        reward_backbone.load_state_dict(reward_ckpt["backbone_state_dict"])
+    else:
+        reward_backbone.load_state_dict(actor_weights)
 
     reward_model = RecSysRewardModel(
         backbone=reward_backbone,
         freeze_backbone=True,
     ).to(device)
-    reward_model.load_state_dict(reward_ckpt["model_state_dict"])
+    rm_weights = reward_ckpt["model_state_dict"] if "model_state_dict" in reward_ckpt else reward_ckpt
+    reward_model.load_state_dict(rm_weights)
     reward_model.eval()
     for p in reward_model.parameters():
         p.requires_grad = False
+    print(f"[Critic] Restored State-Action Critic Q(s, a) from: {rm_ckpt_path}")
 
     print("\n" + "=" * 70)
     print(f"TRAINING PHASE 2 ACTOR-CRITIC (PPO): {args.epochs} EPOCHS")
@@ -314,11 +367,23 @@ def main() -> None:
     print("=" * 70)
 
     # 4. DataLoaders
-    train_dataset = SequentialRecDataset(df=train_df, max_length=cfg["max_length"], is_eval=False)
-    val_dataset = SequentialRecDataset(df=val_df, history_df=train_df, max_length=cfg["max_length"], is_eval=True)
-
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=train_dataset.collate_fn)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=val_dataset.collate_fn)
+    train_loader = create_dataloader(
+        df=train_df,
+        max_length=cfg["max_length"],
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=0,
+        pin_memory=(device.type == "cuda"),
+    )
+    val_loader = create_dataloader(
+        df=val_df,
+        history_df=train_df,
+        max_length=cfg["max_length"],
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=(device.type == "cuda"),
+    )
 
     optimizer = AdamW(actor_model.parameters(), lr=args.lr, weight_decay=0.01)
     total_steps = len(train_loader) * args.epochs

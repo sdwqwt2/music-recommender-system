@@ -172,7 +172,7 @@ def plot_fig3_sft_ablation_pareto() -> None:
         color="#2b6cb0",
     )
 
-    ax.set_title("Pareto Frontier: Auxiliary SFT Regularization ($\gamma$) Prevents Policy Drift", fontsize=11, fontweight="bold", pad=12)
+    ax.set_title(r"Pareto Frontier: Auxiliary SFT Regularization ($\gamma$) Prevents Policy Drift", fontsize=11, fontweight="bold", pad=12)
     ax.set_xlabel("Validation Preference Win Rate (%)", fontsize=10, fontweight="bold")
     ax.set_ylabel("Validation Hit Rate @ 10 (%)", fontsize=10, fontweight="bold")
     ax.set_xlim(69.8, 72.8)
@@ -181,7 +181,7 @@ def plot_fig3_sft_ablation_pareto() -> None:
     # Legend for bubble size
     ax.text(
         0.05, 0.15,
-        "Bubble Size $\sim$ Reward Margin $\Delta r$\nLarger bubbles = higher unconstrained margin",
+        r"Bubble Size $\sim$ Reward Margin $\Delta r$" + "\nLarger bubbles = higher unconstrained margin",
         transform=ax.transAxes,
         fontsize=8,
         bbox=dict(boxstyle="round,pad=0.5", facecolor="#f7fafc", edgecolor="#cbd5e0"),
@@ -211,8 +211,8 @@ def plot_fig4_dpo_dynamics() -> None:
 
     ax2 = ax1.twinx()
     color2 = "#276749"
-    ax2.set_ylabel("Implicit Reward Margin ($\Delta r = r_w - r_l$)", color=color2, fontsize=10, fontweight="bold")
-    line2 = ax2.plot(epochs, margins, marker="s", color=color2, linewidth=2.5, linestyle="--", label="Reward Margin ($\Delta r$)")
+    ax2.set_ylabel(r"Implicit Reward Margin ($\Delta r = r_w - r_l$)", color=color2, fontsize=10, fontweight="bold")
+    line2 = ax2.plot(epochs, margins, marker="s", color=color2, linewidth=2.5, linestyle="--", label=r"Reward Margin ($\Delta r$)")
     ax2.tick_params(axis="y", labelcolor=color2)
     ax2.set_ylim(0.0, 0.10)
     ax2.grid(False)

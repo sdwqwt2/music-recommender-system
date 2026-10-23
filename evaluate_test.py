@@ -248,6 +248,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate RecSys GPT-2 on Held-Out Test Set")
     parser.add_argument("--processed_dir", type=str, default=default_processed, help="Directory containing processed splits")
     parser.add_argument("--checkpoint_path", type=str, default=default_ckpt, help="Path to best_gpt2_recsys.pt")
+    parser.add_argument("--output_path", type=str, default=None, help="Path to save test_evaluation_metrics.json (default: next to checkpoint or /kaggle/working)")
     parser.add_argument("--batch_size", type=int, default=32, help="Evaluation batch size")
     parser.add_argument("--num_samples", type=int, default=10, help="Number of qualitative users to inspect")
     parser.add_argument("--fp16", action="store_true", help="Enable FP16 evaluation")
@@ -364,11 +365,27 @@ def main() -> None:
     print(f"Duration-NDCG@10   | {metrics['duration_ndcg@10']:<22.4f} | (Relevance scaled by listen duration)")
     print("=" * 75)
 
-    # Save test metrics
-    metrics_path = ckpt_path.parent / "test_evaluation_metrics.json"
-    with open(metrics_path, "w", encoding="utf-8") as f:
-        json.dump(metrics, f, indent=2)
-    print(f"[Export] Saved dual-track test metrics to: {metrics_path}")
+    # Save test metrics with fallback for read-only input directories
+    if args.output_path:
+        metrics_path = Path(args.output_path)
+    else:
+        target_dir = ckpt_path.parent
+        # If ckpt is in /kaggle/input (read-only) or directory is not writable, redirect to /kaggle/working
+        if str(target_dir).startswith("/kaggle/input") or not os.access(target_dir, os.W_OK):
+            target_dir = Path("/kaggle/working/checkpoints") if os.path.exists("/kaggle/working") else Path("./checkpoints")
+        metrics_path = target_dir / "test_evaluation_metrics.json"
+
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(metrics_path, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2)
+        print(f"[Export] Saved dual-track test metrics to: {metrics_path}")
+    except OSError as e:
+        fallback_path = Path("/kaggle/working/test_evaluation_metrics.json") if os.path.exists("/kaggle/working") else Path("./test_evaluation_metrics.json")
+        fallback_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(fallback_path, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=2)
+        print(f"[Export] Target directory was read-only ({e}). Saved test metrics to fallback: {fallback_path}")
 
     # 5. Qualitative Inspection
     run_qualitative_inspection(

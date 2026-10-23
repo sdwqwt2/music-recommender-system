@@ -4,87 +4,87 @@
     "beta": 0.1,
     "sft_weight": 0.0,
     "strategy": "binary_skip",
-    "val_win_rate": 61.84,
-    "val_margin": 0.0036,
-    "val_hr@10": 0.2482758620689655,
-    "val_ndcg@10": 0.153656618008275,
-    "elapsed_sec": 1.1
+    "val_win_rate": 67.19,
+    "val_margin": 0.1735,
+    "val_hr@10": 0.06883835279655809,
+    "val_ndcg@10": 0.05383321389651573,
+    "elapsed_sec": 41.9
   },
   {
     "trial_id": 2,
     "beta": 0.1,
     "sft_weight": 0.05,
     "strategy": "binary_skip",
-    "val_win_rate": 58.55,
-    "val_margin": 0.0024,
-    "val_hr@10": 0.21379310344827587,
-    "val_ndcg@10": 0.1432757363024019,
-    "elapsed_sec": 0.5
+    "val_win_rate": 64.52,
+    "val_margin": 0.067,
+    "val_hr@10": 0.07867240319606637,
+    "val_ndcg@10": 0.06028961269646759,
+    "elapsed_sec": 41.3
   },
   {
     "trial_id": 3,
     "beta": 0.1,
     "sft_weight": 0.1,
     "strategy": "binary_skip",
-    "val_win_rate": 51.64,
-    "val_margin": 0.0011,
-    "val_hr@10": 0.23448275862068965,
-    "val_ndcg@10": 0.14918360112198828,
-    "elapsed_sec": 0.5
+    "val_win_rate": 63.23,
+    "val_margin": 0.0432,
+    "val_hr@10": 0.07867240319606637,
+    "val_ndcg@10": 0.05874703026327525,
+    "elapsed_sec": 41.4
   },
   {
     "trial_id": 4,
     "beta": 0.1,
     "sft_weight": 0.2,
     "strategy": "binary_skip",
-    "val_win_rate": 53.95,
-    "val_margin": 0.0009,
-    "val_hr@10": 0.23448275862068965,
-    "val_ndcg@10": 0.1495003337051488,
-    "elapsed_sec": 0.6
+    "val_win_rate": 61.87,
+    "val_margin": 0.0289,
+    "val_hr@10": 0.07559926244622003,
+    "val_ndcg@10": 0.05772589804912466,
+    "elapsed_sec": 41.3
   },
   {
     "trial_id": 5,
     "beta": 0.05,
     "sft_weight": 0.1,
     "strategy": "binary_skip",
-    "val_win_rate": 56.25,
-    "val_margin": 0.0004,
-    "val_hr@10": 0.22758620689655173,
-    "val_ndcg@10": 0.14628780615574677,
-    "elapsed_sec": 0.5
+    "val_win_rate": 62.29,
+    "val_margin": 0.0141,
+    "val_hr@10": 0.07682851874615858,
+    "val_ndcg@10": 0.05793764918861853,
+    "elapsed_sec": 41.4
   },
   {
     "trial_id": 6,
     "beta": 0.2,
     "sft_weight": 0.1,
     "strategy": "binary_skip",
-    "val_win_rate": 52.96,
-    "val_margin": 0.0023,
-    "val_hr@10": 0.2620689655172414,
-    "val_ndcg@10": 0.1560018425817737,
-    "elapsed_sec": 0.6
+    "val_win_rate": 63.53,
+    "val_margin": 0.1165,
+    "val_hr@10": 0.07867240319606637,
+    "val_ndcg@10": 0.0599676675029594,
+    "elapsed_sec": 41.4
   },
   {
     "trial_id": 7,
     "beta": 0.1,
     "sft_weight": 0.1,
     "strategy": "played_ratio",
-    "val_win_rate": 53.95,
-    "val_margin": 0.0012,
-    "val_hr@10": 0.23448275862068965,
-    "val_ndcg@10": 0.1477008271472856,
-    "elapsed_sec": 0.5
+    "val_win_rate": 62.89,
+    "val_margin": 0.0419,
+    "val_hr@10": 0.07498463429625077,
+    "val_ndcg@10": 0.05705447274425741,
+    "elapsed_sec": 41.1
   },
   {
     "trial_id": 8,
     "beta": 0.1,
     "sft_weight": 0.1,
     "strategy": "margin_threshold",
-    "val_win_rate": 60.53,
-    "val_margin": 0.0021,
-    "val_hr@10": 0.23448275862068965,
-    "val_ndcg@10": 0.1479707586668695,
-    "elapsed_sec": 0.6
+    "val_win_rate": 62.62,
+    "val_margin": 0.0424,
+    "val_hr@10": 0.07682851874615858,
+    "val_ndcg@10": 0.05789165663576301,
+    "elapsed_sec": 41.2
   }
 ]

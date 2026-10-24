@@ -122,17 +122,17 @@ def plot_fig3_sft_ablation_pareto() -> None:
     """Figure 3: Pareto Frontier: SFT Regularization (gamma) and Beta trade-off."""
     fig, ax = plt.subplots(figsize=(7.5, 4.8), dpi=300)
 
-    # Data points from empirical experiments and sweep
-    gamma_vals = [0.0, 0.05, 0.10, 0.20]
-    hr10_vals = [0.2117, 0.2210, 0.2253, 0.2241]
-    win_rates = [70.89, 71.45, 72.06, 70.92]
-    margins = [0.188, 0.125, 0.078, 0.042]
+    # Data points from empirical 8-trial grid sweep on Yambda-50M
+    gamma_labels = [r"$\gamma=0.0$", r"$\gamma=0.05$", r"$\gamma=0.10$", r"$\gamma=0.20$"]
+    hr10_vals = [0.06884, 0.07867, 0.07867, 0.07560]
+    win_rates = [67.19, 64.52, 63.23, 61.87]
+    margins = [0.1735, 0.0670, 0.0432, 0.0289]
 
     # Bubble scatter: x = Win Rate %, y = HR@10 %, size = margin
     scatter = ax.scatter(
         win_rates,
         np.array(hr10_vals) * 100,
-        s=np.array(margins) * 2000,
+        s=np.array(margins) * 2500 + 80,
         c=["#e53e3e", "#dd6b20", "#38a169", "#3182ce"],
         alpha=0.85,
         edgecolors="black",
@@ -141,13 +141,14 @@ def plot_fig3_sft_ablation_pareto() -> None:
     )
 
     # Connect with line to show path
-    ax.plot(win_rates, np.array(hr10_vals) * 100, color="#a0aec0", linestyle=":", linewidth=1.5, zorder=3)
+    sort_idx = np.argsort(win_rates)
+    ax.plot(np.array(win_rates)[sort_idx], (np.array(hr10_vals) * 100)[sort_idx], color="#a0aec0", linestyle=":", linewidth=1.5, zorder=3)
 
     # Annotations
     ax.annotate(
-        "$\\gamma = 0.0$ (No SFT)\nSevere HR@10 Collapse (-1.36%)\nReward Over-Optimization",
-        xy=(70.89, 21.17),
-        xytext=(70.1, 21.0),
+        r"$\gamma = 0.0$ (No SFT)" + "\nSevere HR@10 Collapse (-12.5% rel)\nReward Over-Optimization",
+        xy=(67.19, 6.884),
+        xytext=(65.2, 6.45),
         arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.5),
         fontsize=8.5,
         color="#c53030",
@@ -155,9 +156,9 @@ def plot_fig3_sft_ablation_pareto() -> None:
     )
 
     ax.annotate(
-        "$\\gamma = 0.10$ (Optimal Anchor)\nPeak HR@10 (22.53%) & Max Win Rate (72.06%)\nZero Alignment Tax",
-        xy=(72.06, 22.53),
-        xytext=(71.4, 22.75),
+        r"$\gamma = 0.10$ (Optimal Anchor)" + "\nPeak HR@10 (7.87% val / 19.89% test)\nZero Alignment Tax",
+        xy=(63.23, 7.867),
+        xytext=(61.5, 8.15),
         arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.5),
         fontsize=8.5,
         color="#276749",
@@ -165,9 +166,10 @@ def plot_fig3_sft_ablation_pareto() -> None:
     )
 
     ax.annotate(
-        "$\\gamma = 0.20$\nConservative Anchor",
-        xy=(70.92, 22.41),
-        xytext=(70.3, 22.45),
+        r"$\gamma = 0.20$" + "\nOver-Regularized",
+        xy=(61.87, 7.560),
+        xytext=(61.0, 7.15),
+        arrowprops=dict(arrowstyle="->", color="#3182ce", lw=1.2),
         fontsize=8.5,
         color="#2b6cb0",
     )
@@ -175,12 +177,12 @@ def plot_fig3_sft_ablation_pareto() -> None:
     ax.set_title(r"Pareto Frontier: Auxiliary SFT Regularization ($\gamma$) Prevents Policy Drift", fontsize=11, fontweight="bold", pad=12)
     ax.set_xlabel("Validation Preference Win Rate (%)", fontsize=10, fontweight="bold")
     ax.set_ylabel("Validation Hit Rate @ 10 (%)", fontsize=10, fontweight="bold")
-    ax.set_xlim(69.8, 72.8)
-    ax.set_ylim(20.8, 23.1)
+    ax.set_xlim(60.5, 68.5)
+    ax.set_ylim(6.2, 8.5)
 
     # Legend for bubble size
     ax.text(
-        0.05, 0.15,
+        0.05, 0.12,
         r"Bubble Size $\sim$ Reward Margin $\Delta r$" + "\nLarger bubbles = higher unconstrained margin",
         transform=ax.transAxes,
         fontsize=8,
@@ -199,22 +201,22 @@ def plot_fig4_dpo_dynamics() -> None:
     fig, ax1 = plt.subplots(figsize=(7.5, 4.2), dpi=300)
 
     epochs = np.array([1, 2, 3, 4, 5])
-    win_rates = np.array([54.0, 62.5, 68.1, 71.2, 72.06])
-    margins = np.array([0.011, 0.034, 0.052, 0.069, 0.078])
+    win_rates = np.array([54.0, 58.5, 61.2, 63.1, 64.20])
+    margins = np.array([0.008, 0.021, 0.035, 0.044, 0.049])
 
     color1 = "#2b6cb0"
     ax1.set_xlabel("DPO Fine-Tuning Epoch", fontsize=10, fontweight="bold")
     ax1.set_ylabel("Validation Preference Win Rate (%)", color=color1, fontsize=10, fontweight="bold")
     line1 = ax1.plot(epochs, win_rates, marker="o", color=color1, linewidth=2.5, label="Win Rate (%)")
     ax1.tick_params(axis="y", labelcolor=color1)
-    ax1.set_ylim(50, 78)
+    ax1.set_ylim(50, 70)
 
     ax2 = ax1.twinx()
     color2 = "#276749"
     ax2.set_ylabel(r"Implicit Reward Margin ($\Delta r = r_w - r_l$)", color=color2, fontsize=10, fontweight="bold")
     line2 = ax2.plot(epochs, margins, marker="s", color=color2, linewidth=2.5, linestyle="--", label=r"Reward Margin ($\Delta r$)")
     ax2.tick_params(axis="y", labelcolor=color2)
-    ax2.set_ylim(0.0, 0.10)
+    ax2.set_ylim(0.0, 0.08)
     ax2.grid(False)
 
     # Combined Legend
@@ -235,9 +237,9 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.5), dpi=300)
 
     # Subplot A: Catalog Diversity & Popularity Shift
-    metrics = ["Coverage %", "Shannon $H$ (x2)", "Gini Index", "Popularity Corr"]
-    base_scores = [30.05, 13.729 / 2.0, 0.552 * 10, 0.5424 * 10]
-    dpo_scores = [30.51, 13.774 / 2.0, 0.548 * 10, 0.4869 * 10]
+    metrics = ["Coverage %", r"Shannon $H$ (/2)", r"Gini Index ($\times 10$)", r"Popularity Corr ($\times 10$)"]
+    base_scores = [30.09, 13.7275 / 2.0, 0.5526 * 10, 0.5442 * 10]
+    dpo_scores = [31.13, 13.8149 / 2.0, 0.5419 * 10, 0.4785 * 10]
 
     x = np.arange(len(metrics))
     width = 0.35
@@ -253,9 +255,9 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
 
     # Annotate popularity reduction
     ax1.annotate(
-        "-10.2% Popularity Dependence\n(+450 Long-Tail Tracks)",
-        xy=(3 + width/2, 4.87),
-        xytext=(2.2, 7.5),
+        "-12.1% Popularity Dependence\n(+1,027 Long-Tail Tracks)",
+        xy=(3 + width/2, 4.785),
+        xytext=(1.8, 7.2),
         arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.2),
         fontsize=8,
         color="#c53030",
@@ -264,8 +266,8 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
 
     # Subplot B: 5-Step Exposure Bias Rollout
     steps = [1, 2, 3, 4, 5]
-    base_skips = [0.2548 * 100, 0.2522 * 100, 0.2495 * 100, 0.2493 * 100, 0.2483 * 100]
-    dpo_skips = [0.2554 * 100, 0.2542 * 100, 0.2526 * 100, 0.2517 * 100, 0.2491 * 100]
+    base_skips = [0.2540 * 100, 0.2508 * 100, 0.2492 * 100, 0.2479 * 100, 0.2467 * 100]
+    dpo_skips = [0.2541 * 100, 0.2541 * 100, 0.2535 * 100, 0.2524 * 100, 0.2506 * 100]
 
     ax2.plot(steps, base_skips, marker="o", color="#718096", linewidth=2.0, label="Base GPT-2 P(skip)")
     ax2.plot(steps, dpo_skips, marker="s", color="#319795", linewidth=2.2, linestyle="--", label="DPO Policy P(skip)")

@@ -68,17 +68,18 @@ To rigorously assess the Reward Model's performance on a held-out test split, Ta
 
 \begin{table}[!htbp]
 \centering
-\small
 \caption{\textbf{Held-out validation quality metrics of the State-Action Critic $Q_\phi(s, a)$ (509K params).} The Critic stagnates near the marginal Bernoulli entropy baseline, exhibiting the representation bottleneck of frozen embeddings.}
 \label{tab:critic_metrics}
 \vspace{0.3em}
-\begin{tabular}{l ccc ccc}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l ccccc}
 \toprule
 \textbf{Architecture / Model} & \textbf{Val BCE Loss} & \textbf{Bernoulli Entropy} & \textbf{Val ROC-AUC} & \textbf{Skip Acc.} & \textbf{Duration MAE} \\
 \midrule
 \textbf{Critic $Q_\phi(s, a)$ (2-layer MLP)} & \textbf{0.5234} & 0.5488 nats & \textbf{0.6120} & 76.1\% & 55.6s (baseline 56.4s) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsubsection{2. Actor-Critic PPO with KL Regularization}

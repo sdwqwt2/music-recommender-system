@@ -260,49 +260,220 @@ $$\mathcal{L}_{\text{total}}(\theta) = \mathcal{L}_{\text{DPO}}(\theta; \pi_{\te
 
 ## 10. Инструкция по Воспроизведению и Резюме Кодовой Базы
 
-### Структура модулей:
-- [`train_base.py`](../train_base.py): Обучение базового Causal GPT-2 Next-Item Recommender.
-- [`reward_model.py`](../reward_model.py): Архитектура State-Action Critic $Q(s, a)$ и вычисление composite reward.
+### 10.1. Архитектурная карта конвейера (Pipeline Architecture)
+
+Сквозной пайплайн исследования спроектирован по модульному принципу: каждый этап порождает детерминированный артефакт (чекпоинт, датасет или структурированный JSON), передаваемый следующему модулю:
+
+```
+[Raw Yambda / Synthetic Log]
+            │
+            ▼ (data_utils.py / preprocess_pipeline)
+  [data/processed/] ─── train_interactions.parquet, val_interactions.parquet, 
+                        test_interactions.parquet, item_tokenizer.json
+            │
+            ├──────────────────────────────────────────────────────┐
+            ▼ (train_base.py)                                      ▼ (sweep_dpo.py)
+[checkpoints/best_gpt2_recsys.pt] (Base MLE)               [reports/dpo_sweep_results.json]
+            │
+            ├──────────────────────────┬───────────────────────────┐
+            ▼ (reward_model.py)        ▼ (train_dpo.py)            ▼ (train_ppo.py)
+[checkpoints/best_reward_model.pt] [checkpoints/best_dpo_gpt2.pt] [checkpoints/best_ppo_gpt2.pt]
+            │                          │                           │
+            └──────────────────────────┼───────────────────────────┘
+                                       ▼ (evaluate_analysis.py)
+                  [reports/analysis_metrics_kaggle_yambda50m.json]
+                                       │
+                                       ▼ (generate_figures.py)
+                           [reports/figures/fig1..fig5.png]
+                                       │
+                                       ▼ (reports/latex/compile.sh)
+                             [reports/latex/main_en.pdf]
+```
+
+### 10.2. Структура модулей:
+- [`train_base.py`](../train_base.py): Обучение базового Causal GPT-2 Next-Item Recommender (Next-Item MLE) с Cosine Annealing, FP16 AMP.
+- [`reward_model.py`](../reward_model.py): Архитектура State-Action Critic $Q(s, a)$ (509K параметров) поверх контекстных эмбеддингов, multi-task BCE + SmoothL1 обучение.
 - [`dpo_dataset.py`](../dpo_dataset.py): Модуль майнинга пар предпочтений с поддержкой стратегий `binary_skip`, `played_ratio` и `margin_threshold`.
-- [`train_dpo.py`](../train_dpo.py): Обучение DPO Policy Alignment с SFT-регуляризацией.
-- [`train_ppo.py`](../train_ppo.py): Реализация Actor-Critic PPO с сэмплированием действий и KL-штрафом.
-- [`sweep.py`](../sweep.py): Сетка исследования гиперпараметров и границы Парето.
+- [`train_dpo.py`](../train_dpo.py): Обучение DPO Policy Alignment с вспомогательным SFT-якорем и память-эффективным расчётом `last_token_only`.
+- [`train_ppo.py`](../train_ppo.py): Реализация Actor-Critic PPO с сэмплированием действий, клиппингом суррогата и KL-штрафом.
+- [`sweep_dpo.py`](../sweep_dpo.py): Сетка исследования гиперпараметров и границы Парето (8 конфигураций).
 - [`generate_figures.py`](../generate_figures.py): Генератор публикационных графиков (300 DPI).
-- [`evaluate_analysis.py`](../evaluate_analysis.py): Комплексный бенчмарк, бутстрэп, МакНемар, Уилкоксон, метрики разнообразия и роллауты.
+- [`evaluate_analysis.py`](../evaluate_analysis.py): Комплексный бенчмарк по 98 504 трекам, бутстрэп (5 000 ресэмплов), МакНемар, Уилкоксон, разнообразие и роллауты.
 - [`kaggle_run.ipynb`](../kaggle_run.ipynb): Автономный Jupyter-ноутбук для воспроизведения всех этапов на GPU (Tesla T4).
 
-### Команды воспроизведения:
-```bash
-# 1. Генерация всех графиков исследования
-python generate_figures.py
+---
 
-# 2. Запуск комплексного статистического бенчмарка и тестов
+### 10.3. Уровень 1: Экспресс-проверка пайплайна (Smoke Test на CPU за 30 секунд)
+
+Для быстрой проверки работоспособности всех модулей без скачивания 50M строк датасета и без использования GPU:
+
+```bash
+# 1. Обучение базовой модели на синтетических данных (5 000 событий)
+python train_base.py \
+    --synthetic \
+    --data_path data/synthetic_yambda.parquet \
+    --processed_dir data/processed_smoke \
+    --output_dir checkpoints/smoke \
+    --epochs 3 \
+    --batch_size 16 \
+    --n_embd 64 --n_layer 2 --n_head 2
+
+# 2. Обучение State-Action Critic на сгенерированных сплитах
+python reward_model.py \
+    --processed_dir data/processed_smoke \
+    --base_checkpoint checkpoints/smoke/best_gpt2_recsys.pt \
+    --output_dir checkpoints/smoke \
+    --epochs 2 \
+    --batch_size 16
+
+# 3. Быстрое DPO выравнивание
+python train_dpo.py \
+    --processed_dir data/processed_smoke \
+    --base_checkpoint checkpoints/smoke/best_gpt2_recsys.pt \
+    --output_dir checkpoints/smoke \
+    --epochs 2 \
+    --batch_size 16 \
+    --beta 0.1 \
+    --sft_weight 0.1
+
+# 4. Экспресс-бенчмарк с бутстрэпом (500 ресэмплов)
+python evaluate_analysis.py \
+    --processed_dir data/processed_smoke \
+    --base_checkpoint checkpoints/smoke/best_gpt2_recsys.pt \
+    --dpo_checkpoint checkpoints/smoke/best_dpo_gpt2.pt \
+    --reward_checkpoint checkpoints/smoke/best_reward_model.pt \
+    --output_json reports/analysis_metrics_synthetic_smoke.json \
+    --num_bootstrap 500 \
+    --num_rollout_users 50
+```
+
+---
+
+### 10.4. Уровень 2: Воспроизведение в облаке Kaggle GPU (Tesla T4 / P100)
+
+1. Откройте [Kaggle](https://www.kaggle.com) $\to$ **New Notebook**.
+2. В **Settings** выберите Accelerator: `GPU T4 x 2` и `Internet ON`.
+3. Загрузите [`kaggle_run.ipynb`](../kaggle_run.ipynb) через **File -> Upload Notebook**.
+4. Привяжите датасет Yambda и запустите **Run All**.
+
+---
+
+### 10.5. Уровень 3: Промышленное воспроизведение на собственном GPU-сервере (NVIDIA CUDA)
+
+Полная цепочка команд для обучения на оригинальном датасете Яндекс Музыки (50M строк):
+
+```bash
+# ШАГ 1: Предобработка датасета и темпоральное сплитование
+python -c "
+from data_utils import preprocess_pipeline
+preprocess_pipeline(
+    data_path='data/yambda_interactions.parquet',
+    output_dir='data/processed',
+    min_item_frequency=5,
+    max_items=100000,
+    split_mode='global_temporal',
+)
+"
+
+# ШАГ 2: Фаза 1 — Обучение базового Causal GPT-2 (Next-Item MLE)
+python train_base.py \
+    --data_path data/yambda_interactions.parquet \
+    --processed_dir data/processed \
+    --output_dir checkpoints \
+    --epochs 10 \
+    --batch_size 32 \
+    --gradient_accumulation_steps 4 \
+    --lr 5e-4 \
+    --n_embd 384 --n_layer 3 --n_head 4 --max_length 64 \
+    --fp16
+
+# ШАГ 3: Фаза 2.1 — Обучение модели вознаграждения / Критика Q(s, a)
+python reward_model.py \
+    --processed_dir data/processed \
+    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
+    --output_dir checkpoints \
+    --epochs 5 \
+    --batch_size 64 \
+    --lr 1e-3 \
+    --skip_threshold_sec 30.0 \
+    --fp16
+
+# ШАГ 4: Фаза 2.2 — Direct Preference Optimization (DPO с SFT-якорем)
+python train_dpo.py \
+    --processed_dir data/processed \
+    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
+    --output_dir checkpoints \
+    --epochs 5 \
+    --batch_size 64 \
+    --gradient_accumulation_steps 2 \
+    --lr 5e-5 \
+    --beta 0.1 \
+    --sft_weight 0.1 \
+    --preference_strategy binary_skip \
+    --skip_threshold_sec 30.0 \
+    --fp16
+
+# ШАГ 5: Фаза 2.3 — Обучение Actor-Critic PPO (RL Бейзлайн)
+python train_ppo.py \
+    --processed_dir data/processed \
+    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
+    --reward_checkpoint checkpoints/best_reward_model.pt \
+    --output_dir checkpoints \
+    --epochs 3 \
+    --batch_size 32 \
+    --lr 3e-5 \
+    --beta_kl 0.05 \
+    --sft_weight 0.1 \
+    --reward_type composite \
+    --fp16
+
+# ШАГ 6: Исследование границы Парето и сетка гиперпараметров (DPO Sweep)
+python sweep_dpo.py \
+    --processed_dir data/processed \
+    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
+    --output_json reports/dpo_sweep_results.json \
+    --epochs_per_trial 2 \
+    --batch_size 64 \
+    --fp16
+
+# ШАГ 7: Финальный статистический бенчмарк (9 048 пользователей, 98 504 трека)
 python evaluate_analysis.py \
     --processed_dir data/processed \
     --base_checkpoint checkpoints/best_gpt2_recsys.pt \
     --dpo_checkpoint checkpoints/best_dpo_gpt2.pt \
     --reward_checkpoint checkpoints/best_reward_model.pt \
+    --output_json reports/analysis_metrics_kaggle_yambda50m.json \
+    --batch_size 32 \
     --num_bootstrap 5000 \
-    --num_rollout_users 500
+    --num_rollout_users 500 \
+    --rollout_steps 5
 
-# 3. Быстрое DPO дообучение с выбранной стратегией
-python train_dpo.py \
-    --processed_dir data/processed \
-    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
-    --output_dir checkpoints \
-    --preference_strategy played_ratio \
-    --beta 0.1 \
-    --sft_weight 0.1 \
-    --epochs 5
+# ШАГ 8: Генерация публикационных графиков (300 DPI)
+python generate_figures.py
 
-# 4. Запуск PPO Actor-Critic бенчмарка
-python train_ppo.py \
-    --processed_dir data/processed \
-    --base_checkpoint checkpoints/best_gpt2_recsys.pt \
-    --reward_checkpoint checkpoints/best_reward_model.pt \
-    --reward_type composite \
-    --epochs 3
+# ШАГ 9: Сборка английского академического препринта в PDF
+cd reports/latex && ./compile.sh
 ```
+
+---
+
+### 10.6. Аналитическая верификация: Картирование результатов отчёта на кодовую базу
+
+В таблице ниже показано точное соответствие между метриками из разделов отчёта, исходным кодом их вычисления и сохранёнными JSON-артефактами:
+
+| Научный раздел отчёта | Метрика в отчёте | Значение в исследовании | Скрипт реализации | Функция и строки кода | Артефакт сохранения |
+|---|---|:---:|---|---|---|
+| **Раздел 4 (Сводная таблица)** | **Base HR@10 / NDCG@10** | **19.23% / 0.1323** | `evaluate_analysis.py` | `evaluate_policy_per_user()` (строки 120–195) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `base_policy` |
+| **Раздел 4 (Сводная таблица)** | **DPO HR@10 / NDCG@10** | **19.89% / 0.1350** | `evaluate_analysis.py` | `evaluate_policy_per_user()` (строки 120–195) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `dpo_policy` |
+| **Раздел 4 (Сводная таблица)** | **Critic Re-Rank ($\lambda=0.5$)** | **19.27% / 0.1326** | `evaluate_analysis.py` | `evaluate_critic_reranking_per_user()` (строки 200–265) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `critic_rerank_lambda_0.5` |
+| **Раздел 3 (Reward Model)** | **Critic Val BCE / ROC-AUC** | **0.5234 / 0.6120** | `reward_model.py` | `evaluate_critic_validation()` (строки 380–450) | Логи обучения `checkpoints/best_reward_model.pt` |
+| **Раздел 5 (Бутстрэп)** | **95% CI дельты HR@10** | **[+0.0038, +0.0097]** ($p < 10^{-4}$) | `evaluate_analysis.py` | `compute_bootstrap_ci()` (строки 270–340) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `statistical_tests` $\to$ `hr@10` |
+| **Раздел 5 (МакНемар)** | **$\chi^2$ / p-value / чистый выигрыш** | **18.32 / $1.9 \times 10^{-5}$ / +60 чел.** | `evaluate_analysis.py` | `compute_mcnemar_test()` (строки 350–395) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `mcnemar_test` |
+| **Раздел 5 (Уилкоксон)** | **Wilcoxon $W$ (NDCG@10 / MRR)** | **$p = 0.0007$ / $p = 0.0009$** | `evaluate_analysis.py` | `scipy.stats.wilcoxon` (строки 770–790) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `wilcoxon_tests` |
+| **Раздел 7 (Каталог)** | **Coverage% / Shannon $H$ / Gini** | **31.13% (+1 027 треков) / 13.815 бит** | `evaluate_analysis.py` | `compute_catalog_health_metrics()` (строки 420–510) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `catalog_health` |
+| **Раздел 7 (Популярность)** | **Spearman $\rho_s$ с частотностью** | **0.5442 $\to$ 0.4785 ($-12.1\%$)** | `evaluate_analysis.py` | `scipy.stats.spearmanr` (строки 490–505) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `catalog_health` $\to$ `spearman_popularity` |
+| **Раздел 7 (Граница Парето)** | **Сетка 8 конфигураций ($\beta, \gamma$)** | **Ablation vs Winner ($\gamma=0.1$)** | `sweep_dpo.py` | `run_dpo_trial()` (строки 50–130) | `reports/dpo_sweep_results.json` |
+| **Раздел 8 (Роллауты)** | **5-шаговый роллаут Exposure Bias** | **+1.5с суммарного времени** | `evaluate_analysis.py` | `simulate_autoregressive_rollouts()` (строки 520–560) | `reports/analysis_metrics_kaggle_yambda50m.json` $\to$ `autoregressive_rollouts` |
 
 ---
 

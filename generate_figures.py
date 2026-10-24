@@ -110,9 +110,9 @@ def plot_fig2_reward_formulations() -> None:
     axes[2].set_ylim(-0.7, 1.2)
     axes[2].legend(frameon=True, fontsize=8, loc="lower right")
 
-    plt.suptitle("Comparison of Candidate Reinforcement Learning Reward Formulations", fontsize=12, fontweight="bold", y=1.03)
+    plt.suptitle("Comparison of Candidate Reinforcement Learning Reward Formulations", fontsize=12, fontweight="bold", y=0.98)
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
     out_file = OUTPUT_DIR / "fig2_reward_formulations_comparison.png"
-    plt.tight_layout()
     plt.savefig(out_file, dpi=300)
     plt.close()
     print(f"Generated: {out_file}")
@@ -279,9 +279,9 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
     ax2.set_ylim(24.0, 26.5)
     ax2.legend(frameon=True, fontsize=8.5, loc="lower left")
 
-    plt.suptitle("Catalog Health Expansion and Multi-Step Rollout Robustness", fontsize=12, fontweight="bold", y=1.02)
+    plt.suptitle("Catalog Health Expansion and Multi-Step Rollout Robustness", fontsize=12, fontweight="bold", y=0.98)
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
     out_file = OUTPUT_DIR / "fig5_catalog_health_and_rollouts.png"
-    plt.tight_layout()
     plt.savefig(out_file, dpi=300)
     plt.close()
     print(f"Generated: {out_file}")

@@ -1,11 +1,23 @@
 \documentclass[11pt,a4paper]{article}
 
 % --- Typography and Geometry ---
-\usepackage[left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage[left=20mm,right=20mm,top=20mm,bottom=20mm]{geometry}
 \usepackage{setspace}
-\setstretch{1.15}
-\setlength{\parskip}{5pt}
+\setstretch{1.12}
+\setlength{\parskip}{4.5pt}
 \setlength{\parindent}{0pt}
+
+% --- Float Placement Adjustments to prevent empty float pages ---
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.10}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
 
 % --- Language and Encoding (Academic Russian + English) ---
 \usepackage[T2A]{fontenc}
@@ -53,7 +65,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small \textit{T-Lab RecSys 2026: RL-Alignment для Causal Recommenders}}
-\fancyhead[R]{\small \textit{IMRaD Research Report}}
+\fancyhead[R]{\small \textit{Report}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.5pt}
 
@@ -62,11 +74,10 @@
 \large\textit{Reinforcement Learning Alignment for Causal Sequential Recommenders:\\Overcoming the Skip Dilemma without Alignment Tax}}
 
 \author{
-    \textbf{Александр Иленко} \\
-    \small Лаборатория Рекомендательных Систем и Обучения с Подкреплением (T-Lab RecSys) \\
-    \small \texttt{alexander.ilenko@example.org}
+    \textbf{Александр Куриленко} \\
+    \small \texttt{kurilenko.a.koivis@yandex.ru}
 }
-\date{Октябрь 2026}
+\date{}
 
 \begin{document}
 

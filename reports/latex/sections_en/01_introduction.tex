@@ -4,7 +4,7 @@
 \subsection{Industrial Context and the Skip Dilemma}
 Modern recommender systems for audio streaming platforms (e.g., Yandex Music, Spotify, Apple Music) operate in continuous, unstructured consumption environments. Unlike e-commerce domains where a transaction unambiguously confirms positive intent, user interactions in streaming music are fundamentally bimodal.
 
-Analysis of interaction logs on the large-scale Yandex Music dataset (\textbf{Yambda-50M})~\cite{yandex2024yambda,volkov2026session} reveals that \textbf{30\% to 35\%} of all recorded events represent immediate skips: the continuous listening duration is less than 30 seconds (or even 0.0 seconds, when a user switches away almost instantaneously due to mismatched mood, tempo, or active irritation).
+Analysis of interaction logs on the large-scale Yandex Music dataset (\textbf{Yambda-50M})~\cite{yandex2024yambda,matveev2026session} reveals that \textbf{30\% to 35\%} of all recorded events represent immediate skips: the continuous listening duration is less than 30 seconds (or even 0.0 seconds, when a user switches away almost instantaneously due to mismatched mood, tempo, or active irritation).
 
 \begin{figure}[!htbp]
     \centering
@@ -24,7 +24,7 @@ where $s_{<t} = (a_1, \dots, a_{t-1})$ denotes the user's sequential history, an
 This framing introduces a fundamental conceptual misalignment:
 \begin{enumerate}
     \item \textbf{Penalizing Correct Avoidance (False Negative Problem):} If a user initiated track $a_t$ and abandoned it within 1--2 seconds due to frustration, $\mathcal{L}_{\text{MLE}}$ nonetheless penalizes the recommender whenever the model assigns a low posterior probability to $a_t$.
-    \item \textbf{Blindness to Consumption Quality:} The model is trained to reproduce historical click trajectories rather than maximize satisfaction, engagement, and uninterrupted listening time~\cite{volkov2026session}.
+    \item \textbf{Blindness to Consumption Quality:} The model is trained to reproduce historical click trajectories rather than maximize satisfaction, engagement, and uninterrupted listening time~\cite{matveev2026session}.
     \item \textbf{Popularity Bias Amplification:} Supervised training on raw streaming logs forces autoregressive models to over-exploit safe, high-frequency pop tracks, severely compressing catalog diversity~\cite{petrov2024aligning}.
 \end{enumerate}
 

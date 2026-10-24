@@ -1,31 +1,17 @@
-TARGET_RU = main_ru
-TARGET_EN = main_en
+TARGET = main_en
 
-all: $(TARGET_RU).pdf $(TARGET_EN).pdf main.pdf
+all: $(TARGET).pdf
 
-$(TARGET_RU).pdf: $(TARGET_RU).tex references.bib sections_ru/*.tex
-	pdflatex -interaction=nonstopmode $(TARGET_RU) || true
-	bibtex $(TARGET_RU) || true
-	pdflatex -interaction=nonstopmode $(TARGET_RU) || true
-	pdflatex -interaction=nonstopmode $(TARGET_RU) || true
+$(TARGET).pdf: $(TARGET).tex references.bib sections_en/*.tex
+	pdflatex -interaction=nonstopmode $(TARGET) || true
+	bibtex $(TARGET) || true
+	pdflatex -interaction=nonstopmode $(TARGET) || true
+	pdflatex -interaction=nonstopmode $(TARGET) || true
 
-$(TARGET_EN).pdf: $(TARGET_EN).tex references.bib sections_en/*.tex
-	pdflatex -interaction=nonstopmode $(TARGET_EN) || true
-	bibtex $(TARGET_EN) || true
-	pdflatex -interaction=nonstopmode $(TARGET_EN) || true
-	pdflatex -interaction=nonstopmode $(TARGET_EN) || true
-
-main.pdf: main.tex references.bib sections_ru/*.tex
-	pdflatex -interaction=nonstopmode main || true
-	bibtex main || true
-	pdflatex -interaction=nonstopmode main || true
-	pdflatex -interaction=nonstopmode main || true
-
-ru: $(TARGET_RU).pdf
-
-en: $(TARGET_EN).pdf
+zip:
+	zip -r recsys_rl_report_en.zip main_en.tex references.bib sections_en/ figures/ compile.sh Makefile README.txt
 
 clean:
-	rm -f *.aux *.bbl *.blg *.log *.out *.toc *.synctex.gz *.fdb_latexmk *.fls sections_ru/*.aux sections_en/*.aux sections/*.aux
+	rm -f *.aux *.bbl *.blg *.log *.out *.toc *.synctex.gz *.fdb_latexmk *.fls sections_en/*.aux
 
-.PHONY: all ru en clean
+.PHONY: all zip clean

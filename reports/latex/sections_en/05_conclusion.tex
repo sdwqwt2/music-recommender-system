@@ -8,7 +8,7 @@ Our primary scientific and empirical conclusions are:
     \item \textbf{Achieving Zero Alignment Tax:} Direct Preference Optimization with an auxiliary SFT anchor ($\gamma=0.10$) proves that optimizing for listening duration does not require sacrificing retrieval precision. On 9,048 held-out test users of Yambda-50M, DPO delivered a statistically significant \textbf{+0.67\% HR@10} gain ($p < 0.0001$, net $+60$ users via McNemar's test).
     \item \textbf{DPO Superiority over Two-Stage Paradigms:} End-to-end policy tuning over all 43.2M parameters outperformed both Critic Re-Ranking and Actor-Critic PPO, eliminating reward hacking and bypassing frozen embedding bottlenecks.
     \item \textbf{Catalog Health Expansion:} Contrary to concerns of popularity collapse, DPO reduced Spearman correlation with popularity by \textbf{$-12.1\%$} while uncovering \textbf{+1,027 unique tracks} from the catalog long tail~\cite{petrov2024aligning}.
-    \item \textbf{Autoregressive Robustness:} 5-step unrolls demonstrated that the policy does not suffer from compounding exposure bias, delivering a \textbf{+1.5-second} increase in cumulative session playtime per 5 tracks~\cite{volkov2026session}.
+    \item \textbf{Autoregressive Robustness:} 5-step unrolls demonstrated that the policy does not suffer from compounding exposure bias, delivering a \textbf{+1.5-second} increase in cumulative session playtime per 5 tracks~\cite{matveev2026session}.
 \end{enumerate}
 
 \subsection{Engineering Recommendations for Production}

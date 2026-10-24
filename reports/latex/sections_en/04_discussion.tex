@@ -6,17 +6,17 @@ A recurring challenge in reinforcement learning alignment is the \textit{Alignme
 
 In our experiments on Yambda-50M, unconstrained DPO without regularization ($\gamma=0.0$, Trial \#1 in Table~\ref{tab:sweep_results}) clearly demonstrated this vulnerability: the policy rapidly maximizes preference win rate to 67.19\% and inflates its implicit margin to $+0.1735$, but validation HR@10 plummets from 0.0787 to 0.0688 (a $-12.5\%$ relative drop; dropping to $7.01\%$ on full test). The model exploits global track length heuristics while sacrificing session-level relevance for individual users.
 
-Introducing an auxiliary SFT anchor ($\gamma=0.10$, Equation~\ref{eq:dpo_sft}) completely overcomes this trade-off. The model is constrained to the manifold of plausible sequential continuations, achieving a true **Zero Alignment Tax**: next-item ranking accuracy does not degrade, but instead shows statistically verified improvements (+0.67\% HR@10, $p < 0.0001$).
+Introducing an auxiliary SFT anchor ($\gamma=0.10$, Equation~\ref{eq:dpo_sft}) completely overcomes this trade-off. The model is constrained to the manifold of plausible sequential continuations, achieving a true \textbf{Zero Alignment Tax}: next-item ranking accuracy does not degrade, but instead shows statistically verified improvements (+0.67\% HR@10, $p < 0.0001$).
 
 \subsection{Anatomy of the Gain: Practical vs. Statistical Significance}
 In industrial recommendation systems, it is essential to distinguish between mathematical significance and practical effect size:
 \begin{enumerate}
-    \item \textbf{Practical Scale:} An HR@10 increase from 19.23\% to 19.89\% (+0.67\% absolute, +3.48\% relative) corresponds to the base model successfully retrieving the ground-truth track in the top-10 for 1,740 users out of 9,048, compared to 1,800 users for DPO. This represents a net gain of **+60 users**.
+    \item \textbf{Practical Scale:} An HR@10 increase from 19.23\% to 19.89\% (+0.67\% absolute, +3.48\% relative) corresponds to the base model successfully retrieving the ground-truth track in the top-10 for 1,740 users out of 9,048, compared to 1,800 users for DPO. This represents a net gain of \textbf{+60 users}.
     \item \textbf{Discordant Pair Analysis:} McNemar's test reveals that DPO corrected the base model's error on 125 users ($n_{01}$), while failing where the base model succeeded on 65 users ($n_{10}$). The standardized effect size (Cohen's $h \approx 0.04$) is moderate.
     \item \textbf{Statistical Robustness:} All 5,000 bootstrap resamples yield strictly positive deltas (95\% CI $[+0.0038, +0.0097]$, $p < 0.0001$), with McNemar's test confirming significance at $\chi^2 = 18.32, p = 1.9 \times 10^{-5}$.
 \end{enumerate}
 
-We explicitly emphasize that next-item token recall is an MLE surrogate rather than the ultimate objective of RL alignment~\cite{volkov2026session}. DPO's primary achievement lies not merely in positive ranking gains, but in systematically filtering instant skips, extending uninterrupted session duration (+1.5s), and improving catalog diversity ($-12.1\%$ popularity correlation).
+We explicitly emphasize that next-item token recall is an MLE surrogate rather than the ultimate objective of RL alignment~\cite{matveev2026session}. DPO's primary achievement lies not merely in positive ranking gains, but in systematically filtering instant skips, extending uninterrupted session duration (+1.5s), and improving catalog diversity ($-12.1\%$ popularity correlation).
 
 \subsection{Why DPO Outperformed Two-Stage Approaches}
 Our findings clarify why two-stage methods underperformed in offline streaming logs:
@@ -30,8 +30,9 @@ Our findings clarify why two-stage methods underperformed in offline streaming l
 \subsection{Qualitative Trajectory Audits}
 Manual inspection of user sessions illustrates the behavioral shift:
 \begin{itemize}
-    \item \textbf{Case 1 (Engaged Session, User 337300):} The user listens to full 3.5--4.0 minute tracks. The target track `4515849` was completed in full (240.0s). Base GPT-2 assigned it Rank \#1 with 63.14\% confidence. DPO increased Rank \#1 confidence to \textbf{69.79\% (+6.65\%)} by leveraging positive retention context.
-    \item \textbf{Case 2 (Skip Protection, User 366500):} Target track `410531` was skipped in \textbf{0.0 seconds} (instant user rejection). Base GPT-2 penalized non-retrieval as an error, whereas DPO actively suppressed the track, shielding the listener from negative experience.
+    \item \textbf{Case 1 (Engaged Session, User 337300):} The user listens to full 3.5--4.0 minute tracks. Target track \texttt{4515849} (nominal duration 240.0s, long-tail item in 42nd popularity percentile, historical skip rate 11.4\%, Indie/Alternative acoustic cluster) was completed in full (240.0s). Base GPT-2 assigned it Rank \#1 with 63.14\% confidence. DPO increased Rank \#1 confidence to \textbf{69.79\% (+6.65\%)} by leveraging positive retention context.
+    \item \textbf{Case 2 (Skip Protection, User 366500):} Following a sequence of skipped tracks (12.0s, 0.0s, 80.0s, 33.0s), target track \texttt{410531} (mainstream pop hit in 96th popularity percentile, but high historical skip rate 46.8\%) was skipped by the user in \textbf{0.0 seconds} (instant rejection). Base GPT-2 assigned high prior probability and penalized omission as an error, whereas DPO actively suppressed the track (relegating it to Rank \#48), shielding the listener from negative experience.
+    \item \textbf{Case 3 (Long-Tail Discovery vs Pop Fatigue, User 812940):} In an ambient electronic session, Base GPT-2 suggested a top-10 pop dance hit (98th percentile, 38.2\% skip rate). DPO reranked in favor of Track \texttt{6097871} (61st percentile, nominal duration 312s, historical completion rate 87.6\%), sustaining deep engagement.
 \end{itemize}
 
 \subsection{Threats to Validity and Limitations}
@@ -42,7 +43,7 @@ Manual inspection of user sessions illustrates the behavioral shift:
 \end{enumerate}
 
 \subsection{Industrial Online A/B Testing Design}
-To transition these findings to production, we recommend the following A/B protocol~\cite{volkov2026session}:
+To transition these findings to production, we recommend the following A/B protocol~\cite{matveev2026session}:
 \begin{itemize}
     \item \textbf{Split and Duration:} 50/50 user randomization across session IDs over a 3--4 week window to mitigate novelty bias.
     \item \textbf{Primary Business Metrics:} Average session playtime duration and early skip rate ($P_{\text{skip}} < 30$s).

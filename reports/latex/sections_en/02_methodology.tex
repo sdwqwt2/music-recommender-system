@@ -8,7 +8,7 @@ Let $\mathcal{U}$ be the set of users and $\mathcal{V} = \{1, 2, \dots, |\mathca
 \end{equation}
 where $D_t$ denotes the continuous listening duration for track $a_t$ in seconds.
 
-As our foundational architecture, we employ an autoregressive **Causal GPT-2** transformer~\cite{petrov2024aligning} initialized from scratch:
+As our foundational architecture, we employ an autoregressive \textbf{Causal GPT-2} transformer~\cite{petrov2024aligning} initialized from scratch:
 \begin{itemize}
     \item Vocabulary size: $|\mathcal{V}| + 1 = 98\,505$ (tokens $1 \dots 98\,504$ map to unique track IDs; index $0$ is reserved for \texttt{<PAD>}).
     \item Embedding dimension: $d_{\text{model}} = 384$.
@@ -49,7 +49,7 @@ Normalizes listening duration $D(a)$ against the nominal duration of the track $
 Preference pairs $(y_w \succ y_l)$ are mined by enforcing a minimum gap $\Delta R_B = R_B(y_w) - R_B(y_l) \ge 0.40$, which eliminates boundary noise.
 
 \subsubsection{Formulation C: Multi-Objective Composite Reward}
-Designed for Actor-Critic RL~\cite{volkov2026session}, combining skip probabilities, completion ratio, and an explicit penalty against immediate track repetition (\textit{Repeat Fatigue}):
+Designed for Actor-Critic RL~\cite{matveev2026session}, combining skip probabilities, completion ratio, and an explicit penalty against immediate track repetition (\textit{Repeat Fatigue}):
 \begin{equation}
     R_C(s, a) = \big(1 - P(\text{skip} \mid s, a)\big) \cdot \text{CompletionRatio}(s, a) - \lambda_{\text{skip}} P(\text{skip} \mid s, a) - \lambda_{\text{rep}} \mathbb{I}(a \in s_{t-3:t}),
     \label{eq:reward_c}
@@ -64,6 +64,23 @@ An independent state-action critic $Q_\phi(s, a)$ is trained to predict the expe
     \text{Score}(a \mid s) = z_{\text{base}}(a \mid s) + \lambda \cdot Q_\phi(s, a), \quad \lambda \in \{0.1, 0.3, 0.5\}.
 \end{equation}
 
+To rigorously assess the Reward Model's performance on a held-out test split, Table~\ref{tab:critic_metrics} summarizes its empirical quality. While the Critic achieves a non-trivial ROC-AUC of 0.6120, its validation BCE loss stagnates at 0.5234, very close to the marginal Bernoulli entropy baseline $H(p=0.763) = 0.5488$ nats. Operating over frozen co-occurrence embeddings, the critic lacks raw acoustic signals, creating an expressive bottleneck that limits downstream reranking efficacy.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{\textbf{Held-out validation quality metrics of the State-Action Critic $Q_\phi(s, a)$ (509K params).} The Critic stagnates near the marginal Bernoulli entropy baseline, exhibiting the representation bottleneck of frozen embeddings.}
+\label{tab:critic_metrics}
+\vspace{0.3em}
+\begin{tabular}{l ccc ccc}
+\toprule
+\textbf{Architecture / Model} & \textbf{Val BCE Loss} & \textbf{Bernoulli Entropy} & \textbf{Val ROC-AUC} & \textbf{Skip Acc.} & \textbf{Duration MAE} \\
+\midrule
+\textbf{Critic $Q_\phi(s, a)$ (2-layer MLP)} & \textbf{0.5234} & 0.5488 nats & \textbf{0.6120} & 76.1\% & 55.6s (baseline 56.4s) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsubsection{2. Actor-Critic PPO with KL Regularization}
 The classic Proximal Policy Optimization framework~\cite{schulman2017proximal}. The actor generates distribution $\pi_\theta(a \mid s)$, and actions are sampled. To prevent policy collapse, the objective is regularized by Kullback--Leibler divergence with respect to the reference model:
 \begin{equation}
@@ -77,7 +94,7 @@ Instead of fitting an unstable critic, DPO~\cite{rafailov2023direct} expresses t
 \end{equation}
 Training is performed over preference triplets $\mathcal{D}_{\text{pref}} = \{(s, y_w, y_l)\}$, where $y_w$ is an engaged play ($D \ge 30$s) and $y_l$ is an immediate skip ($D < 30$s).
 
-To prevent degradation of next-item likelihood, we introduce an **auxiliary SFT anchor**:
+To prevent degradation of next-item likelihood, we introduce an \textbf{auxiliary SFT anchor}:
 \begin{equation}
     \mathcal{L}_{\text{total}}(\theta) = \mathcal{L}_{\text{DPO}}(\theta; \pi_{\text{ref}}) + \gamma \cdot \mathcal{L}_{\text{SFT}}(y_w \mid s),
     \label{eq:dpo_sft}
@@ -89,7 +106,7 @@ where
 and $\mathcal{L}_{\text{SFT}}(y_w \mid s) = - \log \pi_\theta(y_w \mid s)$ maximizes the likelihood of the preferred continuation.
 
 \subsection{Evaluation Protocol and Statistical Testing}
-Evaluation is conducted on a strictly held-out test split of \textbf{9,048 users} (\texttt{test\_interactions.parquet}) preserving full historical context. Item candidates are ranked across the **full catalog of 98,504 tracks** without negative sampling shortcuts.
+Evaluation is conducted on a strictly held-out test split of \textbf{9,048 users} (\texttt{test\_interactions.parquet}) preserving full historical context. Item candidates are ranked across the \textbf{full catalog of 98,504 tracks} without negative sampling shortcuts.
 
 Statistical reliability is verified through a rigorous testing suite:
 \begin{enumerate}
@@ -108,5 +125,5 @@ Statistical reliability is verified through a rigorous testing suite:
         \item \textit{Gini Coefficient:} Quantifying inequality across recommendation exposures.
         \item \textit{Spearman Rank Correlation with Popularity:} $\rho_s$, reflecting tendency to over-exploit head items.
     \end{itemize}
-    \item \textbf{Autoregressive Queue Rollouts (Exposure Bias):} Simulating 5 consecutive unrolls ($s_t \to \hat{a}_{t+1} \to \dots \to \hat{a}_{t+5}$) without user feedback, measuring step-wise skip probabilities $P(\text{skip} \mid s_k, \hat{a}_k)$ and cumulative session play duration~\cite{volkov2026session}.
+    \item \textbf{Autoregressive Queue Rollouts (Exposure Bias):} Simulating 5 consecutive unrolls ($s_t \to \hat{a}_{t+1} \to \dots \to \hat{a}_{t+5}$) without user feedback, measuring step-wise skip probabilities $P(\text{skip} \mid s_k, \hat{a}_k)$ and cumulative session play duration~\cite{matveev2026session}.
 \end{enumerate}

@@ -59,29 +59,32 @@
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces \textbf  {Результаты непараметрического бутстрэпа ($B=5\,000$ ресэмплов) и парных статистических тестов (DPO vs Base GPT-2).}}}{8}{table.caption.4}\protected@file@percent }
 \newlabel{tab:statistical_tests}{{2}{8}{\textbf {Результаты непараметрического бутстрэпа ($B=5\,000$ ресэмплов) и парных статистических тестов (DPO vs Base GPT-2).}}{table.caption.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Динамика обучения и граница Парето (Grid Sweep)}{8}{subsection.3.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {Динамика сходимости DPO по эпохам.} Стабильный рост Win Rate пар предпочтений и быстрая монотонная дивергенция скрытой маржи вознаграждения $\Delta r = r(y_w) - r(y_l)$.}}{9}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:dpo_dynamics}{{3}{9}{\textbf {Динамика сходимости DPO по эпохам.} Стабильный рост Win Rate пар предпочтений и быстрая монотонная дивергенция скрытой маржи вознаграждения $\Delta r = r(y_w) - r(y_l)$}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Оздоровление каталога и разнообразие рекомендаций}{8}{subsection.3.4}\protected@file@percent }
+\newlabel{fig:sub_dynamics}{{3a}{9}{Динамика Win Rate и маржи $\Delta r$}{figure.caption.5}{}}
+\newlabel{sub@fig:sub_dynamics}{{a}{9}{Динамика Win Rate и маржи $\Delta r$}{figure.caption.5}{}}
+\newlabel{fig:sub_pareto}{{3b}{9}{Граница Парето SFT-регуляризации $\gamma $}{figure.caption.5}{}}
+\newlabel{sub@fig:sub_pareto}{{b}{9}{Граница Парето SFT-регуляризации $\gamma $}{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {Оптимизация предпочтений и регуляризация DPO.} (а) Быстрая сходимость Win Rate (до 64.20\%) и скрытой маржи вознаграждения $\Delta r$ по эпохам. (б) Предотвращение коллапса точности ($-12.5\%$ без SFT) при помощи вспомогательной регуляризации $\gamma \in [0.05, 0.10]$.}}{9}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:dpo_and_pareto}{{3}{9}{\textbf {Оптимизация предпочтений и регуляризация DPO.} (а) Быстрая сходимость Win Rate (до 64.20\%) и скрытой маржи вознаграждения $\Delta r$ по эпохам. (б) Предотвращение коллапса точности ($-12.5\%$ без SFT) при помощи вспомогательной регуляризации $\gamma \in [0.05, 0.10]$}{figure.caption.5}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces \textbf  {Полные эмпирические результаты сетки гиперпараметров DPO (\texttt  {dpo\_sweep\_results.json}).} Сопоставление веса регуляризации $\gamma $, силы выравнивания $\beta $ и стратегий майнинга.}}{9}{table.caption.6}\protected@file@percent }
 \newlabel{tab:sweep_results}{{3}{9}{\textbf {Полные эмпирические результаты сетки гиперпараметров DPO (\texttt {dpo\_sweep\_results.json}).} Сопоставление веса регуляризации $\gamma $, силы выравнивания $\beta $ и стратегий майнинга}{table.caption.6}{}}
 \citation{ouyang2022training}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Граница Парето: влияние регуляризации $\gamma $ на точность ранжирования.} Чистый DPO ($\gamma =0.0$) раздувает маржу вознаграждения ценой коллапса Next-Item точности ($-12.5\%$ относительное падение HR@10). Включение $\gamma \in [0.05, 0.10]$ формирует глобальный оптимум Парето без деградации точности.}}{10}{figure.caption.7}\protected@file@percent }
-\newlabel{fig:pareto_frontier}{{4}{10}{\textbf {Граница Парето: влияние регуляризации $\gamma $ на точность ранжирования.} Чистый DPO ($\gamma =0.0$) раздувает маржу вознаграждения ценой коллапса Next-Item точности ($-12.5\%$ относительное падение HR@10). Включение $\gamma \in [0.05, 0.10]$ формирует глобальный оптимум Парето без деградации точности}{figure.caption.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Оздоровление каталога и разнообразие рекомендаций}{10}{subsection.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Здоровье каталога и авторегрессионные роллауты.} А: Сравнение разнообразия каталога и корреляции с популярностью. В: Пошаговая вероятность скипа $P(\text  {skip})$ на 5 шагах авторегрессионной генерации очереди.}}{10}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:catalog_and_rollouts}{{4}{10}{\textbf {Здоровье каталога и авторегрессионные роллауты.} А: Сравнение разнообразия каталога и корреляции с популярностью. В: Пошаговая вероятность скипа $P(\text {skip})$ на 5 шагах авторегрессионной генерации очереди}{figure.caption.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Мультишаговые авторегрессионные роллауты (Exposure Bias)}{10}{subsection.3.5}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Здоровье каталога и авторегрессионные роллауты.} А: Сравнение разнообразия и корреляции с популярностью. В: Пошаговая вероятность скипа $P(\text  {skip})$ на 5 шагах авторегрессионной генерации очереди.}}{11}{figure.caption.8}\protected@file@percent }
-\newlabel{fig:catalog_and_rollouts}{{5}{11}{\textbf {Здоровье каталога и авторегрессионные роллауты.} А: Сравнение разнообразия и корреляции с популярностью. В: Пошаговая вероятность скипа $P(\text {skip})$ на 5 шагах авторегрессионной генерации очереди}{figure.caption.8}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \textbf  {Результаты 5-шаговых авторегрессионных роллаутов на тестовом множестве (\texttt  {analysis\_metrics\_kaggle\_yambda50m.json}).}}}{11}{table.caption.9}\protected@file@percent }
-\newlabel{tab:rollouts}{{4}{11}{\textbf {Результаты 5-шаговых авторегрессионных роллаутов на тестовом множестве (\texttt {analysis\_metrics\_kaggle\_yambda50m.json}).}}{table.caption.9}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion (Обсуждение)}{12}{section.4}\protected@file@percent }
-\newlabel{sec:discussion}{{4}{12}{Discussion (Обсуждение)}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Концепция Zero Alignment Tax: преодоление компромисса}{12}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Анатомия эффекта «полупроцента»: практическая vs статистическая значимость}{12}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Почему DPO превзошёл двухстадийные подходы (Critic и PPO)}{13}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Качественный ручной аудит пользовательских траекторий}{13}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Ограничения исследования (Threats to Validity)}{13}{subsection.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Дизайн промышленного онлайн A/B тестирования}{14}{subsection.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion (Заключение)}{14}{section.5}\protected@file@percent }
-\newlabel{sec:conclusion}{{5}{14}{Conclusion (Заключение)}{section.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \textbf  {Результаты 5-шаговых авторегрессионных роллаутов на тестовом множестве (\texttt  {analysis\_metrics\_kaggle\_yambda50m.json}).}}}{10}{table.caption.8}\protected@file@percent }
+\newlabel{tab:rollouts}{{4}{10}{\textbf {Результаты 5-шаговых авторегрессионных роллаутов на тестовом множестве (\texttt {analysis\_metrics\_kaggle\_yambda50m.json}).}}{table.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion (Обсуждение)}{10}{section.4}\protected@file@percent }
+\newlabel{sec:discussion}{{4}{10}{Discussion (Обсуждение)}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Концепция Zero Alignment Tax: преодоление компромисса}{10}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Анатомия эффекта «полупроцента»: практическая vs статистическая значимость}{11}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Почему DPO превзошёл двухстадийные подходы (Critic и PPO)}{11}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Качественный ручной аудит пользовательских траекторий}{12}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Ограничения исследования (Threats to Validity)}{12}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Дизайн промышленного онлайн A/B тестирования}{12}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusion (Заключение)}{13}{section.5}\protected@file@percent }
+\newlabel{sec:conclusion}{{5}{13}{Conclusion (Заключение)}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Инженерные рекомендации для продакшена}{13}{subsection.5.1}\protected@file@percent }
 \bibstyle{unsrt}
 \bibdata{references}
 \bibcite{joachims2005accurately}{1}
@@ -92,8 +95,7 @@
 \bibcite{radford2019language}{6}
 \bibcite{schulman2017proximal}{7}
 \bibcite{rafailov2023direct}{8}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Инженерные рекомендации для продакшена}{15}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Направления дальнейших исследований}{15}{subsection.5.2}\protected@file@percent }
 \bibcite{chen2019top}{9}
 \bibcite{ouyang2022training}{10}
-\gdef \@abspage@last{16}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Направления дальнейших исследований}{14}{subsection.5.2}\protected@file@percent }
+\gdef \@abspage@last{15}

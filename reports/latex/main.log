@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.10.24)  24 OCT 2026 21:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.10.24)  24 OCT 2026 21:25
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -801,7 +801,7 @@ Overfull \hbox (16.19089pt too wide) in paragraph at lines 7--8
 File: figures/fig1_the_skip_dilemma.png Graphic file (type png)
 <use figures/fig1_the_skip_dilemma.png>
 Package pdftex.def Info: figures/fig1_the_skip_dilemma.png  used on input line 11.
-(pdftex.def)             Requested size: 400.61703pt x 225.3464pt.
+(pdftex.def)             Requested size: 355.08984pt x 199.73558pt.
 
 Overfull \hbox (2.49583pt too wide) in paragraph at lines 17--18
 \T2A/cmr/m/n/10.95 Классическая парадигма обучения последовательных рекомендательных систем (SAS-Rec [[]],
@@ -877,7 +877,7 @@ Overfull \hbox (0.44058pt too wide) in paragraph at lines 20--21
 File: figures/fig2_reward_formulations_comparison.png Graphic file (type png)
 <use figures/fig2_reward_formulations_comparison.png>
 Package pdftex.def Info: figures/fig2_reward_formulations_comparison.png  used on input line 27.
-(pdftex.def)             Requested size: 446.13727pt x 133.84251pt.
+(pdftex.def)             Requested size: 391.51021pt x 117.4561pt.
 
 Overfull \hbox (31.83144pt too wide) in paragraph at lines 40--42
 \T2A/cmr/m/n/10.95 Порог 30 секунд является общепринятым индустриальным стандартом стриминга: прослушивания
@@ -962,442 +962,56 @@ Overfull \hbox (14.00768pt too wide) in paragraph at lines 5--6
 \T2A/cmr/m/n/10.95 пользователях. В Таблице [][]1[][] приведены итоговые результаты для всех исследованных подходов. 
  []
 
-
-Overfull \hbox (8.17253pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 HR@5| 
- []
-
-
-Overfull \hbox (13.92113pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 HR@10| 
- []
-
-
-Overfull \hbox (13.92113pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 HR@20| 
- []
-
-
-Overfull \hbox (31.45851pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 NDCG@10| 
- []
-
-
-Overfull \hbox (4.02077pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 MRR| 
- []
-
-
-Overfull \hbox (21.95389pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 Coverage| 
- []
-
-
-Overfull \hbox (19.13513pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 Shannon 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.005%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.010%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.020%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.0035| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.0012| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 100.0%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 16.587| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 15.56%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 19.23%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 23.56%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1323| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1168| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 30.09%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 13.728| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 15.57%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 19.22%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 23.56%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1323| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1202| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 30.12%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 13.731| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 15.54%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 19.25%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 23.63%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1323| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1202| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 30.17%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 13.739| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 15.57%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 19.27%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 23.57%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1326| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1205| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 30.21%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 13.745| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 14.85%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 18.60%| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 23.05%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1265| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 0.1120| 
- []
-
-
-Overfull \hbox (6.9645pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 28.95%| 
- []
-
-
-Overfull \hbox (3.63197pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/n/10 13.415| 
- []
-
-
-Overfull \hbox (11.63002pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 15.90%| 
- []
-
-
-Overfull \hbox (11.63002pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 19.89%| 
- []
-
-
-Overfull \hbox (11.63002pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 24.20%| 
- []
-
-
-Overfull \hbox (7.79762pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 0.1350| 
- []
-
-
-Overfull \hbox (7.79762pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 0.1183| 
- []
-
-
-Overfull \hbox (11.63002pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 31.13%| 
- []
-
-
-Overfull \hbox (7.79762pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 13.815| 
- []
-
-
-Overfull \hbox (2.04903pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/bx/n/10 0.542| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.34%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.67%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.64%| 
- []
-
-
-Overfull \hbox (13.49623pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.0027| 
- []
-
-
-Overfull \hbox (13.49623pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.0015| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +1.04%| 
- []
-
-
-Overfull \hbox (8.38637pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.087| 
- []
-
-
-Overfull \hbox (0.72157pt too wide) in paragraph at lines 30--30
- \T2A/cmr/m/it/10 0.011| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +2.19%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +3.48%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +2.72%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +2.04%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +1.28%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +3.46%| 
- []
-
-
-Overfull \hbox (11.4606pt too wide) in paragraph at lines 30--30
- []|\T2A/cmr/m/it/10 +0.63%| 
- []
-
-
-Overfull \hbox (3.7958pt too wide) in paragraph at lines 30--30
- \T2A/cmr/m/it/10 1.99%| 
- []
-
-
-Overfull \hbox (157.59903pt too wide) in paragraph at lines 42--57
- [][] 
- []
-
 [7]
-<figures/fig4_dpo_training_dynamics.png, id=246, 542.025pt x 303.534pt>
-File: figures/fig4_dpo_training_dynamics.png Graphic file (type png)
-<use figures/fig4_dpo_training_dynamics.png>
-Package pdftex.def Info: figures/fig4_dpo_training_dynamics.png  used on input line 64.
-(pdftex.def)             Requested size: 386.96027pt x 216.70558pt.
-
-Overfull \hbox (15.20544pt too wide) in paragraph at lines 69--70
+Overfull \hbox (15.20544pt too wide) in paragraph at lines 67--68
 []\T2A/cmr/m/n/10.95 В Таблице [][]3[][] представлены эмпирические результаты систематической сетки из 8 конфигураций
  []
 
+<figures/fig4_dpo_training_dynamics.png, id=247, 542.025pt x 303.534pt>
+File: figures/fig4_dpo_training_dynamics.png Graphic file (type png)
+<use figures/fig4_dpo_training_dynamics.png>
+Package pdftex.def Info: figures/fig4_dpo_training_dynamics.png  used on input line 73.
+(pdftex.def)             Requested size: 220.79367pt x 123.64384pt.
+<figures/fig3_sft_ablation_pareto.png, id=248, 542.025pt x 346.896pt>
+File: figures/fig3_sft_ablation_pareto.png Graphic file (type png)
+<use figures/fig3_sft_ablation_pareto.png>
+Package pdftex.def Info: figures/fig3_sft_ablation_pareto.png  used on input line 80.
+(pdftex.def)             Requested size: 220.79367pt x 141.30725pt.
 LaTeX Font Info:    Font shape `T2A/cmtt/bx/n' in size <10> not available
-(Font)              Font shape `T2A/cmtt/m/n' tried instead on input line 74.
+(Font)              Font shape `T2A/cmtt/m/n' tried instead on input line 90.
 
-Underfull \hbox (badness 10000) in paragraph at lines 74--74
+Underfull \hbox (badness 10000) in paragraph at lines 90--90
 []\T2A/cmr/bx/n/10 Таблица 3. |Полные эмпирические результаты сетки гиперпараметров DPO
  []
 
 
-Underfull \hbox (badness 2460) in paragraph at lines 74--74
+Underfull \hbox (badness 2460) in paragraph at lines 90--90
 \T2A/cmr/bx/n/10 (\T2A/cmtt/m/n/10 dpo_sweep_results.json\T2A/cmr/bx/n/10 ). \T2A/cmr/m/n/10 Сопоставление веса регуляризации $\OML/cmm/m/it/10 ^^M$\T2A/cmr/m/n/10 , силы выравнивания $\OML/cmm/m/it/10 ^^L$ \T2A/cmr/m/n/10 и
  []
 
 
-Overfull \hbox (87.77386pt too wide) in paragraph at lines 77--91
- [][] 
- []
-
-<figures/fig3_sft_ablation_pareto.png, id=248, 542.025pt x 346.896pt>
-File: figures/fig3_sft_ablation_pareto.png Graphic file (type png)
-<use figures/fig3_sft_ablation_pareto.png>
-Package pdftex.def Info: figures/fig3_sft_ablation_pareto.png  used on input line 95.
-(pdftex.def)             Requested size: 400.61703pt x 256.40259pt.
-[8] [9 <./figures/fig4_dpo_training_dynamics.png>]
-Overfull \hbox (4.67789pt too wide) in paragraph at lines 103--104
+Overfull \hbox (4.67789pt too wide) in paragraph at lines 114--115
 \T2A/cmr/m/n/10.95 как DPO покрывает \T2A/cmr/bx/n/10.95 31.13% (30666 треков)\T2A/cmr/m/n/10.95 , дополнительно открывая пользователям
  []
 
 
-Overfull \hbox (8.63074pt too wide) in paragraph at lines 104--105
+Overfull \hbox (8.63074pt too wide) in paragraph at lines 115--116
 []\T2A/cmr/bx/n/10.95 Рост энтропии Шеннона: \T2A/cmr/m/n/10.95 С $\OT1/cmr/m/n/10.95 13\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 728$ \T2A/cmr/m/n/10.95 до $\OT1/cmr/m/n/10.95 13\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 815$ \T2A/cmr/bx/n/10.95 бит\T2A/cmr/m/n/10.95 , что указывает на более равномерное
  []
 
-
-Overfull \hbox (15.67395pt too wide) in paragraph at lines 105--106
+[8] [9 <./figures/fig4_dpo_training_dynamics.png> <./figures/fig3_sft_ablation_pareto.png>]
+Overfull \hbox (15.67395pt too wide) in paragraph at lines 116--117
 []\T2A/cmr/bx/n/10.95 Снижение зависимости от популярности: \T2A/cmr/m/n/10.95 Ранговая корреляция Спирмена снизилась
  []
 
-<figures/fig5_catalog_health_and_rollouts.png, id=264, 939.51pt x 325.215pt>
+<figures/fig5_catalog_health_and_rollouts.png, id=269, 939.51pt x 325.215pt>
 File: figures/fig5_catalog_health_and_rollouts.png Graphic file (type png)
 <use figures/fig5_catalog_health_and_rollouts.png>
-Package pdftex.def Info: figures/fig5_catalog_health_and_rollouts.png  used on input line 110.
-(pdftex.def)             Requested size: 446.13727pt x 154.4291pt.
+Package pdftex.def Info: figures/fig5_catalog_health_and_rollouts.png  used on input line 121.
+(pdftex.def)             Requested size: 345.98302pt x 119.76195pt.
 
-Underfull \hbox (badness 4353) in paragraph at lines 111--111
-\T2A/cmr/m/n/10 и корреляции с популярностью. В: Пошаговая вероятность скипа $\OML/cmm/m/it/10 P\OT1/cmr/m/n/10 ([])$ \T2A/cmr/m/n/10 на 5 шагах
- []
-
-
-Overfull \hbox (2.20427pt too wide) in paragraph at lines 116--117
+Overfull \hbox (2.20427pt too wide) in paragraph at lines 127--128
 \T2A/cmr/m/n/10.95 что DPO сохраняет стабильную среднюю длину композиций ( 164.2--165.0 с) и не деградирует
- []
-
-
-Overfull \hbox (85.97807pt too wide) in paragraph at lines 124--139
- [][] 
  []
 
 ) (./sections/04_discussion.tex
@@ -1405,12 +1019,12 @@ Overfull \hbox (9.90796pt too wide) in paragraph at lines 5--6
 \T2A/cmr/m/n/10.95 попытка оптимизировать внешнее вознаграждение неизбежно приводит к деградации базовых
  []
 
-[10 <./figures/fig3_sft_ablation_pareto.png>] [11 <./figures/fig5_catalog_health_and_rollouts.png>]
+
 Overfull \hbox (2.87114pt too wide) in paragraph at lines 7--8
 \T2A/cmr/m/n/10.95 HR@10 катастрофически обрушивается с 0.0787 до 0.0688 (относительное падение на $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 12\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 5%$\T2A/cmr/m/n/10.95 ,
  []
 
-
+[10 <./figures/fig5_catalog_health_and_rollouts.png>]
 Overfull \hbox (22.18202pt too wide) in paragraph at lines 14--15
 \T2A/cmr/m/n/10.95 +3.48% в относителе) означает, что на отложенной тестовой выборке из 9048 пользователей
  []
@@ -1430,7 +1044,7 @@ Overfull \hbox (36.25978pt too wide) in paragraph at lines 16--17
 []\T2A/cmr/bx/n/10.95 Статистическая неслучайность: \T2A/cmr/m/n/10.95 Все 5000 бутстрэп-итераций дают строго положительную
  []
 
-[12]
+
 Overfull \hbox (1.60211pt too wide) in paragraph at lines 24--25
 \T2A/cmr/m/n/10.95 критика застряла на отметке $\OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 523$\T2A/cmr/m/n/10.95 , что означает неспособность критика предсказывать
  []
@@ -1440,7 +1054,7 @@ Overfull \hbox (28.64835pt too wide) in paragraph at lines 25--26
 []\T2A/cmr/bx/n/10.95 Бутылочное горлышко замороженных эмбеддингов: \T2A/cmr/m/n/10.95 MLP-критик (509K параметров)
  []
 
-
+[11]
 Overfull \hbox (19.87277pt too wide) in paragraph at lines 27--28
 []\T2A/cmr/bx/n/10.95 Преимущество DPO: \T2A/cmr/m/n/10.95 DPO полностью обходится без явной функции ценности, сквозным
  []
@@ -1465,7 +1079,7 @@ Overfull \hbox (2.05917pt too wide) in paragraph at lines 39--40
 \T2A/cmr/m/n/10.95 пользователя на трек, которого не было в истории (не наблюдаемый контрфактический
  []
 
-[13]
+
 Overfull \hbox (37.48184pt too wide) in paragraph at lines 47--48
 []\T2A/cmr/bx/n/10.95 Сплит и длительность: \T2A/cmr/m/n/10.95 50/50 случайное распределение пользователей по идентификаторам
  []
@@ -1475,7 +1089,7 @@ Overfull \hbox (3.59113pt too wide) in paragraph at lines 48--49
 []\T2A/cmr/bx/n/10.95 Первичная бизнес-метрика: \T2A/cmr/m/n/10.95 Среднее время непрерывного прослушивания за сессию
  []
 
-) (./sections/05_conclusion.tex
+[12]) (./sections/05_conclusion.tex
 Overfull \hbox (22.81522pt too wide) in paragraph at lines 4--5
 \T2A/cmr/m/n/10.95 задачи Max-i-mum Like-li-hood Es-ti-ma-tion (MLE) и удовлетворјнности пользователя в музыкальных
  []
@@ -1500,7 +1114,7 @@ Overfull \hbox (2.35747pt too wide) in paragraph at lines 11--12
 []\T2A/cmr/bx/n/10.95 Авторегрессионная надјжность: \T2A/cmr/m/n/10.95 Мультишаговые роллауты подтвердили, что DPO
  []
 
-[14]
+
 Overfull \hbox (13.52678pt too wide) in paragraph at lines 18--19
 []\T2A/cmr/m/n/10.95 Обязательно фиксировать SFT-якорь ($\OML/cmm/m/it/10.95 ^^M \OMS/cmsy/m/n/10.95 2 \OT1/cmr/m/n/10.95 [0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 05\OML/cmm/m/it/10.95 ; \OT1/cmr/m/n/10.95 0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 10]$\T2A/cmr/m/n/10.95 ) для удержания модели от коллапса
  []
@@ -1510,12 +1124,12 @@ Overfull \hbox (20.0367pt too wide) in paragraph at lines 19--20
 []\T2A/cmr/m/n/10.95 Отказаться от тяжелых двухстадийных оффлайн-критиков на замороженных эмбеддингах
  []
 
-)
+[13])
 Overfull \hbox (14.28719pt too wide) in paragraph at lines 23--96
 \T2A/cmr/m/n/10.95 Перспективным вектором развития является интеграция мультимодальных аудио-эмбеддингов
  []
 
-(./main.bbl [15]) [16] (./main.aux)
+(./main.bbl [14]) [15] (./main.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-05-26>
@@ -1524,18 +1138,18 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 9AE92E8BBF4E0F1BD91BC678AE372364;12536.
  ) 
 Here is how much of TeX's memory you used:
- 16358 strings out of 469114
- 261280 string characters out of 5458551
- 721079 words of memory out of 5000000
- 45003 multiletter control sequences out of 15000+600000
- 656505 words of font info for 107 fonts, out of 8000000 for 9000
+ 16386 strings out of 469114
+ 261656 string characters out of 5458551
+ 714060 words of memory out of 5000000
+ 45024 multiletter control sequences out of 15000+600000
+ 660591 words of font info for 118 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 74i,13n,79p,2705b,734s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0600.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0700.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on main.pdf (16 pages, 1500023 bytes).
+ 74i,14n,79p,2705b,734s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx0900.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0600.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb></Users/lex/Library/TinyTeX/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on main.pdf (15 pages, 1537232 bytes).
 PDF statistics:
- 465 PDF objects out of 1000 (max. 8388607)
- 376 compressed objects within 4 object streams
- 105 named destinations out of 1000 (max. 500000)
+ 470 PDF objects out of 1000 (max. 8388607)
+ 378 compressed objects within 4 object streams
+ 103 named destinations out of 1000 (max. 500000)
  282 words of extra memory for PDF output out of 10000 (max. 10000000)
 

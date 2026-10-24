@@ -1,0 +1,113 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Typography and Geometry ---
+\usepackage[left=20mm,right=20mm,top=20mm,bottom=20mm]{geometry}
+\usepackage{setspace}
+\setstretch{1.12}
+\setlength{\parskip}{4.5pt}
+\setlength{\parindent}{0pt}
+
+% --- Float Placement Adjustments to prevent empty float pages ---
+\renewcommand{\topfraction}{0.90}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.10}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+
+% --- Language and Encoding (English) ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% --- Math Fonts and Symbols ---
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+
+% --- Professional Tables ---
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{tabularx}
+
+% --- Figures and Captions ---
+\usepackage{graphicx}
+\graphicspath{{figures/}{../figures/}}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+
+% --- Colors and Hyperlinks ---
+\usepackage{xcolor}
+\definecolor{linkblue}{RGB}{31, 78, 121}
+\definecolor{citegreen}{RGB}{34, 139, 34}
+\definecolor{urlteal}{RGB}{0, 128, 128}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    citecolor=citegreen,
+    urlcolor=urlteal,
+    pdfauthor={Alexander Ilenko},
+    pdftitle={Reinforcement Learning Alignment for Causal Sequential Recommenders: Overcoming the Skip Dilemma without Alignment Tax},
+    pdfsubject={Machine Learning, Recommender Systems, Reinforcement Learning},
+    pdfkeywords={Sequential Recommendation, Direct Preference Optimization, Reinforcement Learning, GPT-2, Music Streaming, Yambda}
+}
+
+% --- Header and Footer ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \textit{T-Lab RecSys 2026: RL Alignment for Causal Recommenders}}
+\fancyhead[R]{\small \textit{Research Report}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+% --- Title and Authorship ---
+\title{\vspace{-1.0cm}\textbf{\Large Reinforcement Learning Alignment for Causal Sequential Recommenders:\\Overcoming the Skip Dilemma without Alignment Tax}}
+
+\author{
+    \textbf{Alexander Ilenko} \\
+    \small Recommender Systems and Reinforcement Learning Laboratory (T-Lab RecSys) \\
+    \small \texttt{alexander.ilenko@example.org}
+}
+\date{October 2026}
+
+\begin{document}
+
+\maketitle
+
+% --- Abstract & Keywords ---
+\input{sections_en/00_abstract.tex}
+
+\vspace{0.8em}
+\hrule
+\vspace{0.8em}
+
+% --- Section 1: Introduction ---
+\input{sections_en/01_introduction.tex}
+
+% --- Section 2: Methodology ---
+\input{sections_en/02_methodology.tex}
+
+% --- Section 3: Results ---
+\input{sections_en/03_results.tex}
+
+% --- Section 4: Discussion ---
+\input{sections_en/04_discussion.tex}
+
+% --- Section 5: Conclusion ---
+\input{sections_en/05_conclusion.tex}
+
+% --- References ---
+\vspace{1.0em}
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

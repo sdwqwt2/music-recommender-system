@@ -23,3 +23,13 @@ sweep_results/
 
 # Local Task Description (Untracked)
 TASK_DESCRIPTION.md
+
+# LaTeX Auxiliaries
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk

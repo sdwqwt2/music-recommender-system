@@ -1,7 +1,7 @@
 # Научно-Исследовательский Отчёт: RL-Дообучение Последовательных Рекомендательных Систем
 ### Выравнивание Causal GPT-2 под Удовлетворённость Пользователей: Преодоление Дилеммы Скипов без Налога на Выравнивание
 
-[![Dataset: Yambda-50M](https://img.shields.io/badge/Датасет-Yambda--50M-blue.svg)]([https://huggingface.co/datasets/yandex/yambda](https://huggingface.co/datasets/yandex/yambda))
+[![Dataset: Yambda-50M](https://img.shields.io/badge/Датасет-Yambda--50M-blue.svg)](https://huggingface.co/datasets/yandex/yambda)
 [![Архитектура: Causal GPT-2](https://img.shields.io/badge/Бэкбон-Causal_GPT--2_(43.2M)-orange.svg)](./model.py)
 [![Метод: DPO + SFT](https://img.shields.io/badge/RL_Выравнивание-DPO_%2B_SFT-success.svg)](./train_dpo.py)
 [![Препринт: PDF](https://img.shields.io/badge/Препринт-main__en.pdf-red.svg)](./reports/latex/main_en.pdf)
@@ -92,7 +92,7 @@ $$R_C(s, a) = (1 - P(\text{skip} \mid s, a)) \cdot \text{CompletionRatio}(s, a) 
 
 ## 3. Оценка Качества Модели Вознаграждения (State-Action Critic $Q_\phi(s, a)$)
 
-В соответствии с требованием построения и оценки модели вознаграждения перед её использованием в ре-ранкинге и PPO, независимый State-Action Critic $Q_\phi(s, a)$ (двухслойный MLP, 509K параметров поверх контекстных скрытых состояний $h_t \in \mathbb{R}^{128}$ базового трансформера) был оценён на отложенной выборке:
+В соответствии с требованием построения и оценки модели вознаграждения перед её использованием в ре-ранкинге и PPO, независимый State-Action Critic $Q_\phi(s, a)$ (двухслойный MLP, 509K параметров поверх контекстных скрытых состояний $h_t \in \mathbb{R}^{384}$ базового трансформера) был оценён на отложенной выборке:
 
 | Модель / Архитектура | Валидационный BCE Loss | Энтропия Бернулли (Baseline) | Val ROC-AUC | Точность классификации скипов | Engaged Duration MAE |
 |:---|:---:|:---:|:---:|:---:|:---:|
@@ -314,7 +314,7 @@ $$\mathcal{L}_{\text{total}}(\theta) = \mathcal{L}_{\text{DPO}}(\theta; \pi_{\te
 
 ---
 
-### 11.3. Уровень 1: Экспресс-проверка пайплайна (Smoke Test на CPU за 30 секунд)
+### 11.3. Уровень 1: Экспресс-проверка пайплайна (Smoke Test на CPU / Synthetic Data)
 
 Для быстрой проверки работоспособности всех модулей без скачивания 50M строк датасета и без использования GPU:
 

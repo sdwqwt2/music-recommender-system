@@ -1,0 +1,103 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Typography and Geometry ---
+\usepackage[left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage{setspace}
+\setstretch{1.15}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+
+% --- Language and Encoding (Academic Russian + English) ---
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian,english]{babel}
+
+% --- Math Fonts and Symbols ---
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+
+% --- Professional Tables ---
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{tabularx}
+
+% --- Figures and Captions ---
+\usepackage{graphicx}
+\graphicspath{{figures/}{../figures/}}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+
+% --- Colors and Hyperlinks ---
+\usepackage{xcolor}
+\definecolor{linkblue}{RGB}{31, 78, 121}
+\definecolor{citegreen}{RGB}{34, 139, 34}
+\definecolor{urlteal}{RGB}{0, 128, 128}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    citecolor=citegreen,
+    urlcolor=urlteal,
+    pdfauthor={Alexander Ilenko},
+    pdftitle={RL Alignment for Causal Sequential Recommenders: Overcoming the Skip Dilemma without Alignment Tax},
+    pdfsubject={Machine Learning, Recommender Systems, Reinforcement Learning},
+    pdfkeywords={Sequential Recommendation, Direct Preference Optimization, Reinforcement Learning, GPT-2, Music Streaming, Yambda}
+}
+
+% --- Header and Footer ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small \textit{T-Lab RecSys 2026: RL-Alignment для Causal Recommenders}}
+\fancyhead[R]{\small \textit{IMRaD Research Report}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+
+% --- Title and Authorship ---
+\title{\vspace{-1.0cm}\textbf{\Large Научно-Исследовательский Отчёт:\\RL-Дообучение Последовательных Рекомендательных Систем:\\Преодоление Проблемы Скипов Без Налога на Выравнивание}\\[0.3em]
+\large\textit{Reinforcement Learning Alignment for Causal Sequential Recommenders:\\Overcoming the Skip Dilemma without Alignment Tax}}
+
+\author{
+    \textbf{Александр Иленко} \\
+    \small Лаборатория Рекомендательных Систем и Обучения с Подкреплением (T-Lab RecSys) \\
+    \small \texttt{alexander.ilenko@example.org}
+}
+\date{Октябрь 2026}
+
+\begin{document}
+
+\selectlanguage{russian}
+\maketitle
+
+% --- Abstract & Keywords ---
+\input{sections/00_abstract.tex}
+
+\vspace{0.8em}
+\hrule
+\vspace{0.8em}
+
+% --- Section 1: Introduction ---
+\input{sections/01_introduction.tex}
+
+% --- Section 2: Methodology ---
+\input{sections/02_methodology.tex}
+
+% --- Section 3: Results ---
+\input{sections/03_results.tex}
+
+% --- Section 4: Discussion ---
+\input{sections/04_discussion.tex}
+
+% --- Section 5: Conclusion ---
+\input{sections/05_conclusion.tex}
+
+% --- References ---
+\vspace{1.0em}
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}

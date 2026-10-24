@@ -1,7 +1,7 @@
 # Научно-Исследовательский Отчёт: RL-Дообучение Последовательных Рекомендательных Систем
 ### Выравнивание Causal GPT-2 под Удовлетворённость Пользователей: Преодоление Дилеммы Скипов без Налога на Выравнивание
 
-[![Dataset: Yambda-50M](https://img.shields.io/badge/Датасет-Yambda--50M-blue.svg)]([https://github.com/yandex-research/yambda](https://huggingface.co/datasets/yandex/yambda))
+[![Dataset: Yambda-50M](https://img.shields.io/badge/Датасет-Yambda--50M-blue.svg)]([https://huggingface.co/datasets/yandex/yambda](https://huggingface.co/datasets/yandex/yambda))
 [![Архитектура: Causal GPT-2](https://img.shields.io/badge/Бэкбон-Causal_GPT--2_(43.2M)-orange.svg)](./model.py)
 [![Метод: DPO + SFT](https://img.shields.io/badge/RL_Выравнивание-DPO_%2B_SFT-success.svg)](./train_dpo.py)
 [![Препринт: PDF](https://img.shields.io/badge/Препринт-main__en.pdf-red.svg)](./reports/latex/main_en.pdf)

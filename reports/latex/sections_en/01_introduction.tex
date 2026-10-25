@@ -42,7 +42,7 @@ To resolve the skip dilemma, this paper investigates the alignment of a causal l
 The key scientific and engineering contributions of this work are as follows:
 \begin{enumerate}
     \item \textbf{Multi-Paradigm Comparative Study:} On the unified industrial Yambda-50M dataset, we benchmark four distinct paradigms: a Causal GPT-2 backbone, two-stage re-ranking via a state-action critic $Q(s, a)$, Actor-Critic PPO~\cite{schulman2017proximal}, and end-to-end Direct Preference Optimization (DPO)~\cite{rafailov2023direct}.
-    \item \textbf{Demonstration of Zero Alignment Tax:} We show that adding an auxiliary SFT anchor ($\gamma=0.10$) preserves the underlying semantic coherence of the session, completely avoiding the alignment tax and achieving statistically significant ranking accuracy gains (+0.67\% HR@10, $p < 0.0001$).
+    \item \textbf{Demonstration of Zero Alignment Tax:} We show that adding an auxiliary SFT anchor ($\gamma=0.10$) preserves the underlying semantic coherence of the session, completely avoiding the alignment tax and achieving statistically significant ranking order gains (+1.32\% relative NDCG@10 gain, $p = 0.0366$; +1.69\% relative MRR gain, $p = 0.0260$, with +0.15\% HR@10 gain).
     \item \textbf{Empirical Audit of Reward Formulations:} We investigate binary duration thresholds, continuous completion ratios, and composite repetition-penalized rewards, identifying margin-threshold filtering as the most robust choice.
-    \item \textbf{Catalog Health Expansion:} We demonstrate that DPO reduces Spearman rank correlation with popularity by 12.1\% while exposing users to over 1,000 additional unique long-tail tracks.
+    \item \textbf{Catalog Health Expansion:} We demonstrate that DPO reduces Spearman rank correlation with popularity by 13.4\% while exposing users to +197 additional unique long-tail tracks.
 \end{enumerate}

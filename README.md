@@ -9,7 +9,7 @@
 > **Ключевые артефакты и материалы проекта:**
 > - 📄 **Академический препринт (PDF, формат IMRaD):** [`reports/latex/main_en.pdf`](./reports/latex/main_en.pdf)
 > - 📦 **Архив для компиляции в Overleaf в 1 клик (ZIP):** [`reports/latex/recsys_rl_report_en.zip`](./reports/latex/recsys_rl_report_en.zip)
-> - 📊 **Полный эталонный GPU-бенчмарк (9 048 пользователей):** [`reports/analysis_metrics_kaggle_yambda50m.json`](./reports/analysis_metrics_kaggle_yambda50m.json)
+> - 📊 **Полный эталонный GPU-бенчмарк (9 052 пользователя):** [`reports/analysis_metrics_kaggle_yambda50m.json`](./reports/analysis_metrics_kaggle_yambda50m.json)
 > - 🔬 **Сетка гиперпараметров и стратегий DPO (8 конфигураций):** [`reports/dpo_sweep_results.json`](./reports/dpo_sweep_results.json)
 > - 📓 **Автономный Jupyter-ноутбук для воспроизведения (Kaggle GPU):** [`kaggle_run.ipynb`](./kaggle_run.ipynb)
 
@@ -372,7 +372,7 @@ python evaluate_analysis.py \
 2. **Загрузка и запуск готового раннера:**
    - Перейдите в меню **File -> Upload Notebook** и загрузите [`kaggle_run.ipynb`](./kaggle_run.ipynb).
    - Привяжите датасет Yambda через **+ Add Input** (поиск `yambda` или `yandex-music`).
-   - Нажмите **Run All**: ноутбук последовательно выполнит предобработку, обучение Base GPT-2 (10 эпох, FP16), Critic (5 эпох), DPO (5 эпох), сетку свипа, бенчмарк на 9 048 тестовых пользователях и сохранит артефакты в `/kaggle/working/`.
+   - Нажмите **Run All**: ноутбук последовательно выполнит предобработку, обучение Base GPT-2 (10 эпох, FP16), Critic (5 эпох), DPO (5 эпох), сетку свипа, бенчмарк на 9 052 тестовых пользователях и сохранит артефакты в `/kaggle/working/`.
 
 ---
 
@@ -473,7 +473,7 @@ python sweep_dpo.py \
     --fp16
 
 # ------------------------------------------------------------------------------
-# ШАГ 7: Финальный статистический бенчмарк (9 048 пользователей, 98 504 трека)
+# ШАГ 7: Финальный статистический бенчмарк (9 052 пользователя, 98 504 трека)
 # ------------------------------------------------------------------------------
 python evaluate_analysis.py \
     --processed_dir data/processed \

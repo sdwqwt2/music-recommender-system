@@ -3,10 +3,10 @@
 
 - **Проект / Track:** T-Lab RecSys 2026 — Рекомендательные системы и RL
 - **Дата:** Октябрь 2026
-- **Датасет:** Yandex Music (Yambda-50M, 98 505 уникальных токенов каталога, 33.2M обучающих взаимодействий, 9 048 отложенных тестовых пользователей)
+- **Датасет:** Yandex Music (Yambda-50M, 98 505 уникальных токенов каталога, 33.2M обучающих взаимодействий, 9 052 отложенных тестовых пользователя)
 - **Архитектура:** Causal GPT-2 Backbone (43.2M параметров) + State-Action Critic $Q(s, a)$ (509K параметров) + Direct Preference Optimization (DPO) + Actor-Critic PPO Benchmark
 - **Артефакты результатов:**
-  - Полный эталонный GPU-бенчмарк (9 048 пользователей): [`reports/analysis_metrics_kaggle_yambda50m.json`](./analysis_metrics_kaggle_yambda50m.json)
+  - Полный эталонный GPU-бенчмарк (9 052 пользователя): [`reports/analysis_metrics_kaggle_yambda50m.json`](./analysis_metrics_kaggle_yambda50m.json)
   - Сетка гиперпараметров и стратегий DPO (8 конфигураций): [`reports/dpo_sweep_results.json`](./dpo_sweep_results.json)
   - Локальный смоук-тест на синтетических данных: [`reports/analysis_metrics_synthetic_smoke.json`](./analysis_metrics_synthetic_smoke.json)
   - Английский академический препринт (LaTeX IMRaD): [`reports/latex/main_en.pdf`](./latex/main_en.pdf) и архив для Overleaf [`reports/latex/recsys_rl_report_en.zip`](./latex/recsys_rl_report_en.zip)
@@ -431,7 +431,7 @@ python sweep_dpo.py \
     --batch_size 64 \
     --fp16
 
-# ШАГ 7: Финальный статистический бенчмарк (9 048 пользователей, 98 504 трека)
+# ШАГ 7: Финальный статистический бенчмарк (9 052 пользователя, 98 504 трека)
 python evaluate_analysis.py \
     --processed_dir data/processed \
     --base_checkpoint checkpoints/best_gpt2_recsys.pt \

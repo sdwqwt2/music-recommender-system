@@ -6,17 +6,17 @@ A recurring challenge in reinforcement learning alignment is the \textit{Alignme
 
 In our experiments on Yambda-50M, unconstrained DPO without regularization ($\gamma=0.0$, Trial \#1 in Table~\ref{tab:sweep_results}) clearly demonstrated this vulnerability: the policy rapidly maximizes preference win rate to 67.19\% and inflates its implicit margin to $+0.1735$, but validation HR@10 plummets from 0.0787 to 0.0688 (a $-12.5\%$ relative drop; dropping to $7.01\%$ on full test). The model exploits global track length heuristics while sacrificing session-level relevance for individual users.
 
-Introducing an auxiliary SFT anchor ($\gamma=0.10$, Equation~\ref{eq:dpo_sft}) completely overcomes this trade-off. The model is constrained to the manifold of plausible sequential continuations, achieving a true \textbf{Zero Alignment Tax}: next-item ranking accuracy does not degrade, but instead shows statistically verified improvements (+0.67\% HR@10, $p < 0.0001$).
+Introducing an auxiliary SFT anchor ($\gamma=0.10$, Equation~\ref{eq:dpo_sft}) completely overcomes this trade-off. The model is constrained to the manifold of plausible sequential continuations, achieving a true \textbf{Zero Alignment Tax}: next-item ranking accuracy does not degrade, but instead shows consistent gains (+0.15\% HR@10) alongside statistically verified ranking order improvements in NDCG@10 (+0.0017, $p = 0.0366$) and MRR (+0.0019, $p = 0.0260$).
 
 \subsection{Anatomy of the Gain: Practical vs. Statistical Significance}
 In industrial recommendation systems, it is essential to distinguish between mathematical significance and practical effect size:
 \begin{enumerate}
-    \item \textbf{Practical Scale:} An HR@10 increase from 19.23\% to 19.89\% (+0.67\% absolute, +3.48\% relative) corresponds to the base model successfully retrieving the ground-truth track in the top-10 for 1,740 users out of 9,048, compared to 1,800 users for DPO. This represents a net gain of \textbf{+60 users}.
-    \item \textbf{Discordant Pair Analysis:} McNemar's test reveals that DPO corrected the base model's error on 125 users ($n_{01}$), while failing where the base model succeeded on 65 users ($n_{10}$). The standardized effect size (Cohen's $h \approx 0.04$) is moderate.
-    \item \textbf{Statistical Robustness:} All 5,000 bootstrap resamples yield strictly positive deltas (95\% CI $[+0.0038, +0.0097]$, $p < 0.0001$), with McNemar's test confirming significance at $\chi^2 = 18.32, p = 1.9 \times 10^{-5}$.
+    \item \textbf{Practical Scale:} An HR@10 increase from 19.37\% to 19.52\% (+0.15\% absolute, +0.77\% relative) corresponds to the base model successfully retrieving the ground-truth track in the top-10 for 1,753 users out of 9,052, compared to 1,767 users for DPO. This represents a net gain of \textbf{+14 users}.
+    \item \textbf{Discordant Pair Analysis:} McNemar's paired test reveals that DPO was correct where the base model failed on 162 users ($n_{01}$), while failing where the base model succeeded on 148 users ($n_{10}$), yielding a net advantage of $+14$ users ($\chi^2 = 0.5452, p = 0.4603$).
+    \item \textbf{Statistical Robustness of Ranking Quality:} While next-item classification accuracy (HR@10) shows moderate differences, the quality of candidate ordering shows statistically significant gains under non-parametric bootstrap testing ($B=5\,000$): NDCG@10 increases from 0.1290 to 0.1307 (+0.0017, 95\% CI $[-0.0002, +0.0037]$, $\mathbf{p = 0.0366}$) and MRR increases from 0.1123 to 0.1142 (+0.0019, 95\% CI $[-0.0000, +0.0038]$, $\mathbf{p = 0.0260}$).
 \end{enumerate}
 
-We explicitly emphasize that next-item token recall is an MLE surrogate rather than the ultimate objective of RL alignment~\cite{matveev2026session}. DPO's primary achievement lies not merely in positive ranking gains, but in systematically filtering instant skips, extending uninterrupted session duration (+1.5s), and improving catalog diversity ($-12.1\%$ popularity correlation).
+We explicitly emphasize that next-item token recall is an MLE surrogate rather than the ultimate objective of RL alignment~\cite{matveev2026session}. DPO's primary achievement lies not merely in positive ranking gains, but in systematically filtering instant skips, extending uninterrupted session duration (+2.1s), and improving catalog diversity ($-13.4\%$ popularity correlation).
 
 \subsection{Why DPO Outperformed Two-Stage Approaches}
 Our findings clarify why two-stage methods underperformed in offline streaming logs:

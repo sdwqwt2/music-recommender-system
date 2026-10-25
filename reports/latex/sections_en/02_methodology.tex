@@ -49,7 +49,7 @@ Normalizes listening duration $D(a)$ against the nominal duration of the track $
 Preference pairs $(y_w \succ y_l)$ are mined by enforcing a minimum gap $\Delta R_B = R_B(y_w) - R_B(y_l) \ge 0.40$, which eliminates boundary noise.
 
 \subsubsection{Formulation C: Multi-Objective Composite Reward}
-Designed for Actor-Critic RL~\cite{matveev2026session}, combining skip probabilities, completion ratio, and an explicit penalty against immediate track repetition (\textit{Repeat Fatigue}):
+Motivated by session-level reward formulations incorporating listened ratio~\cite{matveev2026session}, we design a multi-objective composite reward for Actor-Critic RL, combining skip probabilities, completion ratio, and an explicit penalty against immediate track repetition (\textit{Repeat Fatigue}):
 \begin{equation}
     R_C(s, a) = \big(1 - P(\text{skip} \mid s, a)\big) \cdot \text{CompletionRatio}(s, a) - \lambda_{\text{skip}} P(\text{skip} \mid s, a) - \lambda_{\text{rep}} \mathbb{I}(a \in s_{t-3:t}),
     \label{eq:reward_c}
@@ -59,7 +59,7 @@ where $\lambda_{\text{skip}} = 0.5$ and $\lambda_{\text{rep}} = 0.3$.
 \subsection{Reinforcement Learning Alignment Paradigms}
 
 \subsubsection{1. Two-Stage Critic Re-Ranking with $Q(s, a)$}
-An independent state-action critic $Q_\phi(s, a)$ is trained to predict the expected reward $\mathbb{E}[R \mid s, a]$ on top of the frozen embeddings of the base transformer (two-layer MLP, 509K parameters)~\cite{petrov2024aligning}. At inference time, candidate items are scored via a linear combination of base logits and critic predictions:
+Following the paradigm of using a separate critic model to evaluate recommendation quality~\cite{petrov2024aligning}, an independent state-action critic $Q_\phi(s, a)$ is trained to predict the expected reward $\mathbb{E}[R \mid s, a]$. To manage the memory overhead of a 98.5K-token catalog on consumer GPUs, we freeze the underlying transformer representations and train a lightweight two-layer MLP (509K parameters) on top of the contextual embeddings. At inference time, candidate items are scored via a linear combination of base logits and critic predictions:
 \begin{equation}
     \text{Score}(a \mid s) = z_{\text{base}}(a \mid s) + \lambda \cdot Q_\phi(s, a), \quad \lambda \in \{0.1, 0.3, 0.5\}.
 \end{equation}

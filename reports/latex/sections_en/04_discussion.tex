@@ -22,7 +22,7 @@ We explicitly emphasize that next-item token recall is an MLE surrogate rather t
 Our findings clarify why two-stage methods underperformed in offline streaming logs:
 \begin{itemize}
     \item \textbf{Informational Plateau of the Offline Critic:} In Yambda logs, the background skip rate is 23.8\%, yielding a theoretical Bernoulli entropy $H(p) \approx 0.5488$. The critic's validation loss stagnated at $0.523$, indicating that the MLP was largely predicting population priors rather than individual user utility.
-    \item \textbf{Frozen Embedding Bottleneck:} The critic (509K parameters) operated on frozen base embeddings trained purely on co-occurrence statistics. Lacking acoustic representations, it failed to construct an effective separating hyperplane over 98.5K items~\cite{petrov2024aligning}.
+    \item \textbf{Frozen Embedding Bottleneck and Large-Catalog Scaling:} As observed by Petrov and Macdonald~\cite{petrov2024aligning}, scaling transformer-based RL alignment to large item catalogs presents severe computational and memory challenges, leading prior work to restrict experiments to smaller candidate sets ($<4\,000$ items). When scaling to 98.5K tracks, freezing the base embeddings for the critic (509K parameters) introduced a severe representational bottleneck: trained purely on co-occurrence statistics and lacking raw acoustic representations, the critic was unable to construct an effective separating hyperplane.
     \item \textbf{Reward Hacking in PPO:} When optimized against an imperfect critic, PPO rapidly exploited local value-function artifacts, recommending tracks with inflated predicted reward at the expense of session coherence (HR@10 dropped to 18.60\%).
     \item \textbf{The DPO Advantage:} Direct Preference Optimization eliminates the explicit critic altogether, directly aligning all 43.2M transformer parameters through stable log-likelihood ratios~\cite{rafailov2023direct}.
 \end{itemize}
@@ -43,7 +43,7 @@ Manual inspection of user sessions illustrates the behavioral shift:
 \end{enumerate}
 
 \subsection{Industrial Online A/B Testing Design}
-To transition these findings to production, we recommend the following A/B protocol~\cite{matveev2026session}:
+As highlighted by Matveev et al.~\cite{matveev2026session}, offline evaluation cannot fully replace online A/B testing. To transition our findings to production, we propose the following industrial A/B testing protocol:
 \begin{itemize}
     \item \textbf{Split and Duration:} 50/50 user randomization across session IDs over a 3--4 week window to mitigate novelty bias.
     \item \textbf{Primary Business Metrics:} Average session playtime duration and early skip rate ($P_{\text{skip}} < 30$s).

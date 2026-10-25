@@ -201,22 +201,22 @@ def plot_fig4_dpo_dynamics() -> None:
     fig, ax1 = plt.subplots(figsize=(7.5, 4.2), dpi=300)
 
     epochs = np.array([1, 2, 3, 4, 5])
-    win_rates = np.array([54.0, 58.5, 61.2, 63.1, 64.20])
-    margins = np.array([0.008, 0.021, 0.035, 0.044, 0.049])
+    win_rates = np.array([71.9, 71.9, 71.8, 71.6, 71.6])
+    margins = np.array([0.153, 0.185, 0.193, 0.196, 0.196])
 
     color1 = "#2b6cb0"
     ax1.set_xlabel("DPO Fine-Tuning Epoch", fontsize=10, fontweight="bold")
     ax1.set_ylabel("Validation Preference Win Rate (%)", color=color1, fontsize=10, fontweight="bold")
     line1 = ax1.plot(epochs, win_rates, marker="o", color=color1, linewidth=2.5, label="Win Rate (%)")
     ax1.tick_params(axis="y", labelcolor=color1)
-    ax1.set_ylim(50, 70)
+    ax1.set_ylim(65, 80)
 
     ax2 = ax1.twinx()
     color2 = "#276749"
     ax2.set_ylabel(r"Implicit Reward Margin ($\Delta r = r_w - r_l$)", color=color2, fontsize=10, fontweight="bold")
     line2 = ax2.plot(epochs, margins, marker="s", color=color2, linewidth=2.5, linestyle="--", label=r"Reward Margin ($\Delta r$)")
     ax2.tick_params(axis="y", labelcolor=color2)
-    ax2.set_ylim(0.0, 0.08)
+    ax2.set_ylim(0.0, 0.25)
     ax2.grid(False)
 
     # Combined Legend
@@ -238,8 +238,8 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
 
     # Subplot A: Catalog Diversity & Popularity Shift
     metrics = ["Coverage %", r"Shannon $H$ (/2)", r"Gini Index ($\times 10$)", r"Popularity Corr ($\times 10$)"]
-    base_scores = [30.09, 13.7275 / 2.0, 0.5526 * 10, 0.5442 * 10]
-    dpo_scores = [31.13, 13.8149 / 2.0, 0.5419 * 10, 0.4785 * 10]
+    base_scores = [30.16, 13.7535 / 2.0, 0.5512 * 10, 0.5481 * 10]
+    dpo_scores = [30.36, 13.7862 / 2.0, 0.5469 * 10, 0.4748 * 10]
 
     x = np.arange(len(metrics))
     width = 0.35
@@ -255,8 +255,8 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
 
     # Annotate popularity reduction
     ax1.annotate(
-        "-12.1% Popularity Dependence\n(+1,027 Long-Tail Tracks)",
-        xy=(3 + width/2, 4.785),
+        "-13.4% Popularity Dependence\n(+197 Long-Tail Tracks)",
+        xy=(3 + width/2, 4.748),
         xytext=(1.8, 7.2),
         arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.2),
         fontsize=8,
@@ -266,8 +266,8 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
 
     # Subplot B: 5-Step Exposure Bias Rollout
     steps = [1, 2, 3, 4, 5]
-    base_skips = [0.2540 * 100, 0.2508 * 100, 0.2492 * 100, 0.2479 * 100, 0.2467 * 100]
-    dpo_skips = [0.2541 * 100, 0.2541 * 100, 0.2535 * 100, 0.2524 * 100, 0.2506 * 100]
+    base_skips = [0.247 * 100, 0.248 * 100, 0.246 * 100, 0.245 * 100, 0.245 * 100]
+    dpo_skips = [0.246 * 100, 0.247 * 100, 0.244 * 100, 0.246 * 100, 0.247 * 100]
 
     ax2.plot(steps, base_skips, marker="o", color="#718096", linewidth=2.0, label="Base GPT-2 P(skip)")
     ax2.plot(steps, dpo_skips, marker="s", color="#319795", linewidth=2.2, linestyle="--", label="DPO Policy P(skip)")
@@ -276,7 +276,7 @@ def plot_fig5_catalog_health_and_rollouts() -> None:
     ax2.set_xlabel("Autoregressive Generation Step ($k$)", fontsize=9)
     ax2.set_ylabel("Predicted Skip Probability (%)", fontsize=9)
     ax2.set_xticks(steps)
-    ax2.set_ylim(24.0, 26.5)
+    ax2.set_ylim(23.5, 26.0)
     ax2.legend(frameon=True, fontsize=8.5, loc="lower left")
 
     plt.suptitle("Catalog Health Expansion and Multi-Step Rollout Robustness", fontsize=12, fontweight="bold", y=0.98)

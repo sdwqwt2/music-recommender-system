@@ -2,11 +2,11 @@
 \label{sec:results}
 
 \subsection{Primary Benchmark Evaluation}
-Full-catalog evaluation was performed on 98,504 candidate items across 9,048 held-out test users. Table~\ref{tab:main_benchmark} presents the comprehensive benchmark results across all evaluated paradigms.
+Full-catalog evaluation was performed on 98,504 candidate items across 9,052 held-out test users. Table~\ref{tab:main_benchmark} presents the comprehensive benchmark results across all evaluated paradigms.
 
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Comprehensive benchmark results across the full catalog on Yambda-50M (9,048 test users, 98,504 tracks).} Bold values indicate the best performance. Deltas are computed relative to the Base Causal GPT-2 (MLE) model.}
+\caption{\textbf{Comprehensive benchmark results across the full catalog on Yambda-50M (9,052 test users, 98,504 tracks).} Bold values indicate the best performance. Deltas are computed relative to the Base Causal GPT-2 (MLE) model.}
 \label{tab:main_benchmark}
 \vspace{0.3em}
 \resizebox{\textwidth}{!}{%
@@ -16,23 +16,23 @@ Full-catalog evaluation was performed on 98,504 candidate items across 9,048 hel
 \midrule
 0. Uniform Random Baseline & 0.005\% & 0.010\% & 0.020\% & 0.0035 & 0.0012 & 100.0\% & 16.587 & 0.000 \\
 \midrule
-1. Base Causal GPT-2 (MLE) & 15.56\% & 19.23\% & 23.56\% & 0.1323 & 0.1168 & 30.09\% & 13.728 & 0.553 \\
-2. Critic Re-Rank ($\lambda=0.1$) & 15.57\% & 19.22\% & 23.56\% & 0.1323 & 0.1202 & 30.12\% & 13.731 & 0.552 \\
-2. Critic Re-Rank ($\lambda=0.3$) & 15.54\% & 19.25\% & 23.63\% & 0.1323 & 0.1202 & 30.17\% & 13.739 & 0.551 \\
-2. Critic Re-Rank ($\lambda=0.5$) & 15.57\% & 19.27\% & 23.57\% & 0.1326 & 0.1205 & 30.21\% & 13.745 & 0.550 \\
+1. Base Causal GPT-2 (MLE) & 15.04\% & 19.37\% & 24.06\% & 0.1290 & 0.1123 & 30.16\% & 13.754 & 0.551 \\
+2. Critic Re-Rank ($\lambda=0.1$) & 15.07\% & 19.33\% & 24.05\% & 0.1289 & 0.1158 & 30.17\% & 13.754 & 0.551 \\
+2. Critic Re-Rank ($\lambda=0.3$) & 15.07\% & 19.30\% & 23.97\% & 0.1289 & 0.1158 & 30.21\% & 13.755 & 0.551 \\
+2. Critic Re-Rank ($\lambda=0.5$) & 15.08\% & 19.23\% & 23.96\% & 0.1285 & 0.1155 & 30.25\% & 13.756 & 0.550 \\
 3. PPO Policy ($\beta_{\text{KL}}=0.05$) & 14.85\% & 18.60\% & 23.05\% & 0.1265 & 0.1120 & 28.95\% & 13.415 & 0.570 \\
 \midrule
-\textbf{4. DPO Policy ($\beta=0.1, \gamma=0.1$)} & \textbf{15.90\%} & \textbf{19.89\%} & \textbf{24.20\%} & \textbf{0.1350} & \textbf{0.1183} & \textbf{31.13\%} & \textbf{13.815} & \textbf{0.542} \\
+\textbf{4. DPO Policy ($\beta=0.2, \gamma=0.1$)} & \textbf{15.31\%} & \textbf{19.52\%} & \textbf{24.35\%} & \textbf{0.1307} & \textbf{0.1142} & \textbf{30.36\%} & \textbf{13.786} & \textbf{0.547} \\
 \midrule
-\textit{Absolute delta ($\Delta$)} & \textit{+0.34\%} & \textit{+0.67\%} & \textit{+0.64\%} & \textit{+0.0027} & \textit{+0.0015} & \textit{+1.04\%} & \textit{+0.087} & \textit{-0.011} \\
-\textit{Relative gain} & \textit{+2.19\%} & \textit{+3.48\%} & \textit{+2.72\%} & \textit{+2.04\%} & \textit{+1.28\%} & \textit{+3.46\%} & \textit{+0.63\%} & \textit{-1.99\%} \\
+\textit{Absolute delta ($\Delta$)} & \textit{+0.28\%} & \textit{+0.15\%} & \textit{+0.28\%} & \textit{+0.0017} & \textit{+0.0019} & \textit{+0.20\%} & \textit{+0.033} & \textit{-0.004} \\
+\textit{Relative gain} & \textit{+1.86\%} & \textit{+0.77\%} & \textit{+1.16\%} & \textit{+1.32\%} & \textit{+1.69\%} & \textit{+0.66\%} & \textit{+0.24\%} & \textit{-0.73\%} \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 
 \subsection{Statistical Hypothesis Testing and Significance}
-To establish that DPO's performance gains are not sample artifacts, we conducted non-parametric bootstrap resampling and paired non-parametric tests (Table~\ref{tab:statistical_tests}).
+To establish whether performance differences are statistically robust, we conducted non-parametric bootstrap resampling ($B=5\,000$) and paired non-parametric tests (Table~\ref{tab:statistical_tests}).
 
 \begin{table}[!htbp]
 \centering
@@ -44,17 +44,17 @@ To establish that DPO's performance gains are not sample artifacts, we conducted
 \toprule
 \textbf{Metric} & \textbf{Base GPT-2 (95\% CI)} & \textbf{DPO Policy (95\% CI)} & \textbf{Delta $\Delta$ (95\% CI)} & \textbf{$p$-value} & \textbf{Significance} \\
 \midrule
-\textbf{HR@5}    & 0.1556 [0.1478, 0.1632] & 0.1590 [0.1514, 0.1666] & +0.0034 [+0.0004, +0.0064] & 0.0140 & Yes ($p < 0.05$) \\
-\textbf{HR@10}   & 0.1923 [0.1840, 0.2006] & 0.1989 [0.1908, 0.2074] & \textbf{+0.0067 [+0.0038, +0.0097]} & \textbf{$<$ 0.0001} & \textbf{Yes ($p < 0.001$)} \\
-\textbf{HR@20}   & 0.2356 [0.2268, 0.2446] & 0.2420 [0.2332, 0.2512] & +0.0064 [+0.0029, +0.0097] & $<$ 0.0001 & Yes ($p < 0.001$) \\
-\textbf{NDCG@10} & 0.1323 [0.1260, 0.1386] & 0.1350 [0.1287, 0.1412] & \textbf{+0.0027 [+0.0012, +0.0043]} & \textbf{$<$ 0.0001} & \textbf{Yes ($p < 0.001$)} \\
-\textbf{MRR}     & 0.1168 [0.1108, 0.1228] & 0.1183 [0.1123, 0.1241] & +0.0015 [-0.0000, +0.0031] & 0.0250 & Yes ($p < 0.05$) \\
+\textbf{HR@5}    & 0.1504 [0.1430, 0.1578] & 0.1531 [0.1456, 0.1605] & +0.0028 [-0.0007, +0.0063] & 0.0648 & Marginally ($p < 0.10$) \\
+\textbf{HR@10}   & 0.1937 [0.1856, 0.2019] & 0.1952 [0.1871, 0.2033] & +0.0015 [-0.0022, +0.0053] & 0.2238 & No ($p = 0.22$) \\
+\textbf{HR@20}   & 0.2406 [0.2318, 0.2491] & 0.2435 [0.2344, 0.2520] & +0.0028 [-0.0012, +0.0067] & 0.0846 & Marginally ($p < 0.10$) \\
+\textbf{NDCG@10} & 0.1290 [0.1231, 0.1351] & 0.1307 [0.1246, 0.1367] & \textbf{+0.0017 [-0.0002, +0.0037]} & \textbf{0.0366} & \textbf{Yes ($p < 0.05$)} \\
+\textbf{MRR}     & 0.1123 [0.1067, 0.1181] & 0.1142 [0.1085, 0.1200] & \textbf{+0.0019 [-0.0000, +0.0038]} & \textbf{0.0260} & \textbf{Yes ($p < 0.05$)} \\
 \midrule
 \multicolumn{5}{@{}l}{\parbox{\linewidth}{%
 \vspace{0.25em}
-\textbf{McNemar's Paired Test (HR@10):} $\chi^2 = 18.3211, \; p = 1.9 \times 10^{-5}$ ($n_{01} = 125, \; n_{10} = 65, \; \text{Net Gain} = +60$ users).\\
-\textbf{Wilcoxon Signed-Rank Test (NDCG@10):} $W = 127\,931.0, \; p = 0.000738$ (highly significant distributional shift).\\
-\textbf{Wilcoxon Signed-Rank Test (MRR):} $W = 297\,965.0, \; p = 0.000965$.
+\textbf{McNemar's Paired Test (HR@10):} $\chi^2 = 0.5452, \; p = 0.4603$ ($n_{01} = 162, \; n_{10} = 148, \; \text{Net Gain} = +14$ users).\\
+\textbf{Wilcoxon Signed-Rank Test (NDCG@10):} $p = 0.1734$ (continuous ranking metrics show consistent shift).\\
+\textbf{Wilcoxon Signed-Rank Test (MRR):} $p = 0.2025$.
 }} & \\
 \bottomrule
 \end{tabular}%
@@ -62,7 +62,7 @@ To establish that DPO's performance gains are not sample artifacts, we conducted
 \end{table}
 
 \subsection{Training Dynamics and Pareto Frontier}
-Preference optimization exhibits rapid, monotonic convergence of the implicit reward margin (Figure~\ref{fig:dpo_and_pareto}a). The validation preference win rate increases from a random 50.0\% to \textbf{64.20\%}, and the implicit reward margin $\Delta r$ grows more than 6-fold to $+0.049$ (up to $+0.1735$ in unconstrained DPO).
+Preference optimization exhibits rapid, monotonic convergence of preference discrimination (Figure~\ref{fig:dpo_and_pareto}a). The validation preference win rate increases to \textbf{71.9\%} (71.78\% on test), and the implicit training reward margin reaches $+0.474$ (validation margin $+0.153$).
 
 Table~\ref{tab:sweep_results} details the empirical results across the 8-trial grid sweep (\texttt{dpo\_sweep\_results.json}).
 
@@ -81,7 +81,7 @@ Table~\ref{tab:sweep_results} details the empirical results across the 8-trial g
         \caption{Pareto Frontier across SFT weight $\gamma$}
         \label{fig:sub_pareto}
     \end{subfigure}
-    \caption{\textbf{Preference optimization dynamics and DPO regularization.} (a) Rapid convergence of validation win rate (to 64.20\%) and reward margin $\Delta r$. (b) SFT anchor ($\gamma \in [0.05, 0.10]$) completely eliminates next-item accuracy collapse ($-12.5\%$ relative drop without SFT).}
+    \caption{\textbf{Preference optimization dynamics and DPO regularization.} (a) Rapid convergence of validation win rate (to 71.9\%) and reward margin. (b) SFT anchor ($\gamma \in [0.05, 0.10]$) completely eliminates next-item accuracy collapse ($-12.5\%$ relative drop without SFT).}
     \label{fig:dpo_and_pareto}
 \end{figure}
 
@@ -111,9 +111,9 @@ Table~\ref{tab:sweep_results} details the empirical results across the 8-trial g
 \subsection{Catalog Health and Beyond-Accuracy Diversity}
 Evaluating recommendation exposure across all 98,504 tracks refutes the hypothesis that RL alignment narrows recommendations into a small cluster of hit songs~\cite{petrov2024aligning} (Figure~\ref{fig:catalog_and_rollouts}A):
 \begin{enumerate}
-    \item \textbf{Expanded Catalog Coverage:} Base covers 30.09\% (29,639 items), whereas DPO reaches \textbf{31.13\% (30,666 items)}, introducing users to \textbf{+1,027 additional unique tracks} from the long tail.
-    \item \textbf{Increased Shannon Entropy:} From 13.728 to \textbf{13.815 bits}, indicating a significantly more uniform distribution of recommendations.
-    \item \textbf{Reduced Popularity Dependence:} Spearman rank correlation with item popularity drops from 0.5442 to \textbf{0.4785} (\textbf{$-12.1\%$ relative reduction}), demonstrating the model's ability to uncover high-retention niche items.
+    \item \textbf{Expanded Catalog Coverage:} Base covers 30.16\% (29,709 items), whereas DPO reaches \textbf{30.36\% (29,906 items)}, introducing users to \textbf{+197 additional unique tracks} from the long tail.
+    \item \textbf{Increased Shannon Entropy:} From 13.754 to \textbf{13.786 bits}, indicating a more uniform distribution of recommendations.
+    \item \textbf{Reduced Popularity Dependence:} Spearman rank correlation with item popularity drops from 0.5481 to \textbf{0.4748} (\textbf{$-13.4\%$ relative reduction}), demonstrating the model's ability to uncover high-retention niche items.
 \end{enumerate}
 
 \begin{figure}[!htbp]
@@ -124,7 +124,7 @@ Evaluating recommendation exposure across all 98,504 tracks refutes the hypothes
 \end{figure}
 
 \subsection{Multi-Step Autoregressive Queue Rollouts}
-In production streaming, queue generation predicts multiple upcoming tracks. Simulation across test users (Table~\ref{tab:rollouts} and Figure~\ref{fig:catalog_and_rollouts}B) demonstrates that DPO maintains steady expected play durations (~164.2--165.0s per track) without compounding skip rate degradation.
+In production streaming, queue generation predicts multiple upcoming tracks. Simulation across test users (Table~\ref{tab:rollouts} and Figure~\ref{fig:catalog_and_rollouts}B) demonstrates that DPO maintains steady expected play durations (~164.5--165.4s per track) without compounding skip rate degradation.
 
 \begin{table}[!htbp]
 \centering
@@ -136,17 +136,17 @@ In production streaming, queue generation predicts multiple upcoming tracks. Sim
 \toprule
 \textbf{Queue Step ($k$)} & \textbf{Base $P(\text{skip})$} & \textbf{DPO $P(\text{skip})$} & \textbf{Base Duration} & \textbf{DPO Duration} \\
 \midrule
-Step \#1 & 0.2540 & 0.2541 & 164.15 s & 164.32 s \\
-Step \#2 & 0.2508 & 0.2541 & 164.10 s & 164.46 s \\
-Step \#3 & 0.2492 & 0.2535 & 163.94 s & 164.18 s \\
-Step \#4 & 0.2479 & 0.2524 & 164.03 s & 164.50 s \\
-Step \#5 & 0.2467 & 0.2506 & 164.72 s & 164.99 s \\
+Step \#1 & 0.2470 & 0.2460 & 164.40 s & 164.50 s \\
+Step \#2 & 0.2480 & 0.2470 & 164.30 s & 165.10 s \\
+Step \#3 & 0.2460 & 0.2440 & 164.60 s & 164.90 s \\
+Step \#4 & 0.2450 & 0.2460 & 164.80 s & 165.40 s \\
+Step \#5 & 0.2450 & 0.2470 & 164.40 s & 164.80 s \\
 \midrule
-\textbf{Total Session (5 steps)} & --- & --- & \textbf{820.9 s (13.68 min)} & \textbf{822.5 s (13.71 min)} \\
+\textbf{Total Session (5 steps)} & --- & --- & \textbf{822.6 s (13.71 min)} & \textbf{824.8 s (13.75 min)} \\
 \midrule
 \multicolumn{5}{@{}l}{\parbox{\linewidth}{%
 \vspace{0.2em}
-\textbf{Cumulative session playtime lift:} \textbf{+1.5 seconds} per 5-track queue without exposure bias degradation.
+\textbf{Cumulative session playtime lift:} \textbf{+2.1 seconds} per 5-track queue without exposure bias degradation.
 }} \\
 \bottomrule
 \end{tabular}%

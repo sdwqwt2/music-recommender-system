@@ -404,13 +404,15 @@ def main() -> None:
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     best_win_rate = 0.0
+    best_score = -float("inf")
+    best_hr10 = 0.0
     best_path = output_dir / "best_dpo_gpt2.pt"
 
     print("\n" + "=" * 70)
     print(f"TRAINING PHASE 2 DIRECT PREFERENCE OPTIMIZATION (DPO): {args.epochs} EPOCHS")
     print(f"Policy Parameters: {sum(p.numel() for p in policy_model.parameters() if p.requires_grad):,}")
     print(f"DPO Beta (KL Temperature): {args.beta} | SFT Aux Weight: {args.sft_weight} | LR: {args.lr}")
-    print(f"Mining Cutoff: Engaged >= {args.skip_threshold_sec}s vs Skip < {args.skip_threshold_sec}s")
+    print(f"Mining Strategy: {args.preference_strategy} | Cutoff: Engaged >= {args.skip_threshold_sec}s vs Skip < {args.skip_threshold_sec}s")
     print("=" * 70)
 
     for epoch in range(1, args.epochs + 1):
@@ -461,27 +463,43 @@ def main() -> None:
             f"Val NDCG@10: {val_ndcg:.4f}"
         )
 
-        # Checkpoint based on Validation Win% and HR@10 retention
-        if val_dpo["val_win_rate"] > best_win_rate:
+        # Checkpoint based on Validation HR@10 and reward margin
+        # In sequential recommendation, ranking relevance (val_hr) ensures policy alignment without catastrophic forgetting,
+        # while val_margin ensures preference separation. A composite ranking score gives primary weight to val_hr with positive margin as tie-breaker.
+        val_score = val_hr + 0.05 * val_dpo["val_margin"]
+        is_best = False
+        if val_score > best_score:
+            is_best = True
+            best_score = val_score
+            best_hr10 = max(best_hr10, val_hr)
             best_win_rate = val_dpo["val_win_rate"]
+        elif val_hr > best_hr10:
+            is_best = True
+            best_hr10 = val_hr
+            best_score = max(best_score, val_score)
+            best_win_rate = val_dpo["val_win_rate"]
+
+        if is_best:
             torch.save(
                 {
                     "epoch": epoch,
                     "model_state_dict": policy_model.state_dict(),
                     "val_win_rate": val_dpo["val_win_rate"],
+                    "val_margin": val_dpo["val_margin"],
                     "val_dpo_loss": val_dpo["val_dpo_loss"],
                     "val_hr10": val_hr,
                     "val_ndcg10": val_ndcg,
                     "beta": args.beta,
                     "sft_weight": args.sft_weight,
+                    "preference_strategy": args.preference_strategy,
                     "model_config": cfg,
                 },
                 best_path,
             )
-            print(f"  --> Saved new best DPO Policy checkpoint to: {best_path}")
+            print(f"  --> Saved new best DPO Policy checkpoint (Val HR@10: {val_hr:.4f}, Margin: {val_dpo['val_margin']:+.3f}, Win%: {val_dpo['val_win_rate']:.1f}%) to: {best_path}")
 
     print("\n" + "=" * 70)
-    print(f"DPO Alignment Complete! Best Val Preference Win Rate: {best_win_rate:.2f}%")
+    print(f"DPO Alignment Complete! Best Val HR@10: {best_hr10:.4f} | Best Val Win Rate: {best_win_rate:.2f}%")
     print(f"Checkpoint saved to: {best_path}")
     print("=" * 70)
 
